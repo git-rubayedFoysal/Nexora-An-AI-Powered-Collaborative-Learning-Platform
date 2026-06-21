@@ -4,36 +4,41 @@ class AuthService {
   // register a new user with email and password
   async signUp(email, password, fullName, role) {
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        // Pass additional user metadata (full name and role) during sign-up
+        options: {
+          data: {
+            full_name: fullName,
+            role,
+          },
+        },
+      });
+
       if (error) throw error;
 
-      const user = data.user;
+      const user = data?.user;
 
-      if (!user) throw new Error("User registration failed");
-
-      // Insert additional user details into the 'users' table
-      const { error: insertError } = await supabase
-        .from("users")
-        .insert([
-          {
-            id: user.id,
-            email: user.email,
-            full_name: fullName,
-            role: role,
-          },
-        ])
-        .select()
-        .single();
-
-      if (insertError) {
-        throw insertError;
+      if (!user) {
+        throw new Error("User registration failed");
       }
 
-      // Automatically sign in the user after registration
-      return this.signIn(email, password);
+      const { error: insertError } = await supabase.from("users").insert([
+        {
+          id: user.id,
+          email: user.email,
+          full_name: fullName,
+          role,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      return data;
     } catch (error) {
-      console.error("Error signing up:", error);
-      return null;
+      console.error("SignUp Error:", error.message);
+      throw error;
     }
   }
 
@@ -45,10 +50,10 @@ class AuthService {
         password,
       });
       if (error) throw error;
-      return data.user;
+      return data;
     } catch (error) {
       console.error("Error signing in:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -69,6 +74,7 @@ class AuthService {
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
+      console.log("Current session:", data.session);
       return data.session;
     } catch (error) {
       console.error("Error getting session:", error);
@@ -84,6 +90,30 @@ class AuthService {
       return data.user;
     } catch (error) {
       console.error("Error getting user:", error);
+      return null;
+    }
+  }
+  // Get the current authenticated user's details from the "users" table
+  async getCurrentUserDetails() {
+    try {
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+      if (sessionError || !sessionData?.session?.user) {
+        return null;
+      }
+
+      const userId = sessionData.session.user.id;
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (profileError) throw profileError;
+      return profileData;
+    } catch (error) {
+      console.error("Error getting user details:", error);
       return null;
     }
   }
