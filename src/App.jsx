@@ -7,6 +7,7 @@ import {
   setLoading,
 } from "./features/auth/authSlice";
 import { useEffect } from "react";
+import { Outlet } from "react-router";
 function App() {
   const dispatch = useDispatch();
   // Check for existing session on app load and set up auth state accordingly
@@ -51,11 +52,7 @@ function App() {
 
   return (
     <Container>
-      {/* <h1 className="bg-amber-600 text-white font-bold text-3xl py-3">
-        Nexora: An AI-Powered Collaborative Learning Platform
-      </h1> */}
-      <Login />
-      {/* <Signup /> */}
+      <Outlet />
     </Container>
   );
 }

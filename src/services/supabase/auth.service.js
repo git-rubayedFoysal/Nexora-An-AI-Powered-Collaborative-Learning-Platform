@@ -9,6 +9,7 @@ class AuthService {
         password,
         // Pass additional user metadata (full name and role) during sign-up
         options: {
+          emailRedirectTo: `${window.location.origin}/login`,
           data: {
             full_name: fullName,
             role,
@@ -17,24 +18,6 @@ class AuthService {
       });
 
       if (error) throw error;
-
-      const user = data?.user;
-
-      if (!user) {
-        throw new Error("User registration failed");
-      }
-
-      const { error: insertError } = await supabase.from("users").insert([
-        {
-          id: user.id,
-          email: user.email,
-          full_name: fullName,
-          role,
-        },
-      ]);
-
-      if (insertError) throw insertError;
-
       return data;
     } catch (error) {
       console.error("SignUp Error:", error.message);
@@ -74,7 +57,6 @@ class AuthService {
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
-      console.log("Current session:", data.session);
       return data.session;
     } catch (error) {
       console.error("Error getting session:", error);
@@ -96,21 +78,25 @@ class AuthService {
   // Get the current authenticated user's details from the "users" table
   async getCurrentUserDetails() {
     try {
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
-      if (sessionError || !sessionData?.session?.user) {
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
+
+      if (userError || !userData?.user) {
         return null;
       }
 
-      const userId = sessionData.session.user.id;
+      const userId = userData.user.id;
 
       const { data: profileData, error: profileError } = await supabase
         .from("users")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        return null;
+      }
       return profileData;
     } catch (error) {
       console.error("Error getting user details:", error);
