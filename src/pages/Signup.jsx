@@ -3,8 +3,8 @@ import signupImg from "../assets/Sign up-bro.svg";
 
 function Signup() {
   return (
-    <div className="flex gap-2 font-[Outfit]">
-      <div className="flex justify-center items-center w-full">
+    <div className="flex gap-2 pt-2 font-[Outfit]">
+      <div className="md:flex hidden justify-center items-center w-full">
         <img
           src={signupImg}
           alt="Signup Illustration"

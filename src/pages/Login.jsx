@@ -3,8 +3,8 @@ import loginImg from "../assets/Secure-login-bro.svg";
 
 function Login() {
   return (
-    <div className="flex gap-2 font-[Outfit]">
-      <div className="flex justify-center items-center w-full">
+    <div className="flex pt-10 gap-2 font-[Outfit]">
+      <div className="md:flex hidden justify-center items-center w-full">
         <img
           src={loginImg}
           alt="Login Illustration"
