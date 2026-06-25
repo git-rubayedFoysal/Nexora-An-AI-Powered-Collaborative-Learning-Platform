@@ -16,7 +16,7 @@ function HeroSection() {
       ></div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-19 lg:py-24">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-20 items-center justify-between">
           {/* Left: Copy */}
           <div>
             {/* Eyebrow */}

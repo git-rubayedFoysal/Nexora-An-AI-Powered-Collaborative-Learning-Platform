@@ -5,6 +5,8 @@ import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store.js";
 import { Home, Login, Signup } from "./pages/index.js";
+import DashboardLayout from "./pages/DashboardLayout.jsx";
+import { DashboardHome } from "./components/index.js";
 
 // Define the routes for the application using React Router
 const route = createBrowserRouter([
@@ -33,45 +35,37 @@ const route = createBrowserRouter([
           </h1>
         ),
       },
+    ],
+  },
 
-      // Dashboard Routes
+  // Dashboard Routes
+  {
+    path: "dashboard",
+    element: <DashboardLayout />,
+    children: [
       {
-        path: "dashboard",
-        // element: <DashboardLayout />, // A layout component that includes the sidebar and common dashboard elements
-        element: (
-          <h1 className="text-center text-2xl font-bold text-white mt-10">
-            Welcome to your dashboard!
-          </h1>
-        ),
-        children: [
-          {
-            path: "student",
-            // element: <StudentDashboard />,
-            element: (
-              <h1 className="text-center text-2xl font-bold text-white mt-10">
-                Welcome to the Student Dashboard!
-              </h1>
-            ),
-          },
-          {
-            path: "teacher",
-            // element: <TeacherDashboard />,
-            element: (
-              <h1 className="text-center text-2xl font-bold text-white mt-10">
-                Welcome to the Teacher Dashboard!
-              </h1>
-            ),
-          },
-          {
-            path: "admin",
-            // element: <AdminDashboard />,
-            element: (
-              <h1 className="text-center text-2xl font-bold text-white mt-10">
-                Welcome to the Admin Dashboard!
-              </h1>
-            ),
-          },
-        ],
+        index: true,
+        element: <DashboardHome />,
+      },
+
+      {
+        path: "courses",
+        // element: <Courses />,
+      },
+
+      {
+        path: "assignments",
+        // element: <Assignments />,
+      },
+
+      {
+        path: "quizzes",
+        // element: <Quizzes />,
+      },
+
+      {
+        path: "profile",
+        // element: <Profile />,
       },
     ],
   },

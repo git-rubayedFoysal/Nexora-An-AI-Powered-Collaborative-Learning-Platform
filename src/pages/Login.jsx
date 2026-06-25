@@ -4,14 +4,14 @@ import loginImg from "../assets/Secure-login-bro.svg";
 function Login() {
   return (
     <div className="flex pt-10 gap-2 font-[Outfit]">
-      <div className="md:flex hidden justify-center items-center w-full">
+      <div className="md:flex hidden justify-center items-center w-full auth-page pr-0">
         <img
           src={loginImg}
           alt="Login Illustration"
           className="w-full max-w-lg object-contain"
         />
       </div>
-      <div className="page active auth-page w-full">
+      <div className="page active auth-page w-full flex">
         <div className="fixed inset-0 bg-mesh pointer-events-none z-0"></div>
         <div
           className="fixed inset-0 pointer-events-none z-0"

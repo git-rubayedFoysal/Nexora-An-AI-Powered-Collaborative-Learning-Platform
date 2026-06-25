@@ -13,6 +13,9 @@ import CourseSection from "./Home/CourseSection";
 import CTASection from "./Home/CTASection";
 import Footer from "./Home/Footer";
 import Testimonials from "./Home/Testimonials";
+import Sidebar from "./Dashboard/Sidebar";
+import DashboardHome from "./Dashboard/DashboardHome";
+import DashboardHeader from "./Dashboard/DashboardHeader";
 
 export {
   Input,
@@ -30,4 +33,7 @@ export {
   CTASection,
   Footer,
   Testimonials,
+  Sidebar,
+  DashboardHome,
+  DashboardHeader,
 };

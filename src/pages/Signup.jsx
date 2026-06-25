@@ -3,15 +3,15 @@ import signupImg from "../assets/Sign up-bro.svg";
 
 function Signup() {
   return (
-    <div className="flex gap-2 pt-2 font-[Outfit]">
-      <div className="md:flex hidden justify-center items-center w-full">
+    <div className="flex gap-2 pt-2 font-[Outfit] items-center">
+      <div className="md:flex hidden justify-center items-center w-full auth-page">
         <img
           src={signupImg}
           alt="Signup Illustration"
           className="w-full max-w-lg object-contain"
         />
       </div>
-      <div className="page active auth-page w-full">
+      <div className="page active auth-page w-full flex">
         <div className="fixed inset-0 bg-mesh pointer-events-none z-0"></div>
         <div
           className="fixed inset-0 pointer-events-none z-0"

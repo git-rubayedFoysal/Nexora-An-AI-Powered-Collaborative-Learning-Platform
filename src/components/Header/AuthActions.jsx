@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
-import { logout as authLogout } from "../../features/auth/authSlice";
+import { logout as storeLogout } from "../../features/auth/authSlice";
 import AvatarDropdown from "./AvatarDropdown";
 import { Button } from "../index";
 import authService from "../../services/supabase/auth.service";
@@ -33,7 +33,7 @@ function AuthActions({ initials, displayName, displayEmail }) {
     setAvatarOpen(false);
 
     await authService.signOut();
-    dispatch(authLogout());
+    dispatch(storeLogout());
 
     navigate("/login");
   }

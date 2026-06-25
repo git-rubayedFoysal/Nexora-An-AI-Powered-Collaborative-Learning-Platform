@@ -38,7 +38,7 @@ function Signup() {
   };
 
   return (
-    <div className="glass2 rounded-xl p-8 shadow-[0_32px_80px_rgba(0,0,0,.5)]">
+    <div className="glass2 rounded-xl px-8 py-7 shadow-[0_32px_80px_rgba(0,0,0,.5)]">
       <h1 className="text-2xl font-bold text-center mb-1">Create Account</h1>
       <p className="text-sm text-slate text-center mb-8">
         Join thousands of learners on Nexora.
@@ -81,11 +81,11 @@ function Signup() {
             })}
           />
 
-          <p className="block text-[11px] font-semibold text-slate uppercase tracking-wider mb-2 text-center">
+          <p className="block text-[11px] font-semibold text-slate uppercase tracking-wider mb-2">
             {" "}
-            Create Account As
+            I AM A
           </p>
-          <div className="flex justify-center gap-5 items-center">
+          <div className="grid grid-cols-2 gap-2 items-center">
             <Radio
               label="Student"
               value="student"
