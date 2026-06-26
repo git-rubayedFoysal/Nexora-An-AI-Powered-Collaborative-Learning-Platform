@@ -8,12 +8,9 @@ function AdminContent({ role }) {
         >
           Platform Overview <span className="gradient-text">⚙️</span>
         </h1>
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border bg-coral/10 text-coral border-coral/25 mb-8 animate-pulse-coral font-bold">
-          <span className="w-1.5 h-1.5 rounded-full bg-coral animate-pulse"></span>
-          <span className="text-[11px] font-black text-coral font-mono tracking-[0.15em]">
-            {role.toUpperCase()}
-          </span>
-        </div>
+        <span class="animate-pulse-coral inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/25 font-mono">
+          ● {role.toUpperCase()}
+        </span>
       </div>
 
       {/* Stats */}

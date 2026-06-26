@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router";
 import { useSelector } from "react-redux";
-
 import { Sidebar, DashboardHeader } from "../components/index";
 
 function DashboardLayout() {
@@ -12,8 +11,18 @@ function DashboardLayout() {
   };
 
   const user = useSelector((state) => state.auth.userData);
+  const loading = useSelector((state) => state.auth.isLoading);
   const role = user?.user_metadata?.role || "teacher";
   const name = user?.user_metadata?.full_name || "user";
+  console.log(user);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-navy flex items-center justify-center text-white">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-navy text-white flex">
