@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import authService from "../../services/supabase/auth.service";
+import { supabase } from "../../services/supabase/supabaseClient";
 import {
   login as storeLogin,
   logout as storeLogout,
@@ -21,8 +22,17 @@ function AuthInitializer() {
           dispatch(storeLogout());
           return;
         }
-        console.log(session.user);
-        dispatch(storeLogin(session.user));
+
+        const { data: profile, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (error) throw error;
+        // console.log(profile);
+
+        dispatch(storeLogin(profile));
       } catch (error) {
         console.log(error);
         throw error;
@@ -42,8 +52,18 @@ function AuthInitializer() {
         dispatch(storeLogout());
         return;
       }
+      const { data: profile, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
-      dispatch(storeLogin(session.user));
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      dispatch(storeLogin(profile));
     });
 
     return () => subscription.unsubscribe();

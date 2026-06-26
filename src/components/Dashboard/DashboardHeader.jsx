@@ -6,8 +6,8 @@ import { useSelector } from "react-redux";
 
 function DashboardHeader({ mobileOpen, onMenuToggle }) {
   const [scrolled, setScrolled] = useState(false);
-  const userData = useSelector((state) => state.auth.userData);
-  const user = userData?.user_metadata;
+  const user = useSelector((state) => state.auth.userData);
+  //   const user = userData?.user_metadata;
 
   const initials = user?.full_name
     ? user.full_name

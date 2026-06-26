@@ -260,7 +260,7 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
           <div className="mt-4">
             <button
               onClick={handleLogout}
-              className="nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate hover:text-white hover:bg-white/6 transition-colors"
+              className="nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate hover:text-white hover:bg-white/6 transition-colors cursor-pointer"
             >
               <span className="text-base leading-none">🚪</span>
               Sign out

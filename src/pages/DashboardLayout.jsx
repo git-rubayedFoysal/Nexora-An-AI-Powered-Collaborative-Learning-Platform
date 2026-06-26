@@ -12,9 +12,8 @@ function DashboardLayout() {
 
   const user = useSelector((state) => state.auth.userData);
   const loading = useSelector((state) => state.auth.isLoading);
-  const role = user?.user_metadata?.role || "teacher";
-  const name = user?.user_metadata?.full_name || "user";
-  console.log(user);
+  const role = user?.role || "teacher";
+  const name = user?.full_name || "user";
 
   if (loading) {
     return (

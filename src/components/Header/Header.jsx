@@ -11,6 +11,8 @@ import MobileMenu from "./MobileMenu";
 
 function Header() {
   const userData = useSelector((state) => state.auth.userData);
+  // console.log(userData);
+
   const authStatus = userData ? true : false;
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,15 +43,15 @@ function Header() {
   }
 
   /* ── Derive avatar initials from userData ── */
-  const initials = userData?.user_metadata?.full_name
-    ? userData?.user_metadata?.full_name
+  const initials = userData?.full_name
+    ? userData?.full_name
         .split(" ")
         .slice(0, 2)
         .map((w) => w[0].toUpperCase())
         .join("")
     : "U";
 
-  const displayName = userData?.user_metadata?.full_name ?? "User";
+  const displayName = userData?.full_name ?? "User";
   const displayEmail = userData?.email ?? "";
 
   /* ── Nav links (guests only) ── */
@@ -57,7 +59,7 @@ function Header() {
     { name: "Features", slug: "#features" },
     { name: "Courses", slug: "#courses" },
     { name: "Stats", slug: "#stats" },
-    { name: "Reviews", slug: "#reviews" },
+    { name: "Reviews", slug: "/#reviews" },
   ];
 
   return (
