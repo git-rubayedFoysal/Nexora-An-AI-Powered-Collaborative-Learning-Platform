@@ -7,8 +7,8 @@ const Radio = forwardRef(({ label, value, ...props }, ref) => {
       htmlFor={id}
       className="
       flex items-center gap-3
-      p-3 border-2 border-[#a384ff]
-      rounded-lg cursor-pointer
+      px-2 py-2.5 border-2 border-violet-light
+      rounded-lg cursor-pointer justify-center
       transition-all font-bold
       hover:border-violet-500
       peer-checked:border-violet-500
@@ -27,7 +27,7 @@ const Radio = forwardRef(({ label, value, ...props }, ref) => {
       <div
         className="
         h-5 w-5 rounded-full
-        border-2 border-[#a384ff]
+        border-2 border-violet-light
         transition-all
         peer-checked:border-violet-500
         peer-checked:bg-violet-500

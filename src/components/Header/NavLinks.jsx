@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router";
+
 /**
  * NavLinks
  * --------
@@ -11,11 +13,13 @@
  *  - links: Array<{ name: string, slug: string }>
  */
 function NavLinks({ links }) {
+  const navigate = useNavigate();
   return (
     <nav className="hidden lg:flex items-center gap-6 ml-4">
       {links.map((item) => (
         <a
           key={item.slug}
+          onClick={() => navigate("/")}
           href={item.slug}
           className="relative text-sm font-medium text-slate hover:text-white transition-colors
                      after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0

@@ -15,8 +15,8 @@ function HeroSection() {
         style={{ animationDelay: "2s" }}
       ></div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-19 lg:py-24">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 text-center lg:text-left py-14 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-20 items-center justify-between">
           {/* Left: Copy */}
           <div>
             {/* Eyebrow */}
@@ -29,9 +29,7 @@ function HeroSection() {
 
             {/* Headline */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6 animate-fade-up delay-100 font-[Outfit]">
-              Learn
-              <br />
-              <span className="gradient-text">Smarter.</span>
+              Learn <span className="gradient-text">Smarter.</span>
               <br />
               <span className="text-white/90">Teach Better.</span>
             </h1>
@@ -44,7 +42,7 @@ function HeroSection() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-14 animate-fade-up delay-300">
+            <div className="flex flex-col items-center justify-center lg:justify-start sm:flex-row gap-3 mb-14 animate-fade-up delay-300">
               <Link
                 to="/signup"
                 className="btn-primary px-8 py-3.5 rounded-xl text-sm font-bold text-white inline-flex items-center justify-center gap-2"
@@ -92,7 +90,7 @@ function HeroSection() {
             </div>
 
             {/* Social proof */}
-            <div className="flex items-center gap-4 flex-col sm:flex-row animate-fade-up delay-400">
+            <div className="flex items-center gap-4 justify-center lg:justify-start flex-col sm:flex-row animate-fade-up delay-400">
               <div className="flex -space-x-2.5">
                 {[
                   { label: "RF", from: "from-violet", to: "to-violet-light" },

@@ -66,7 +66,7 @@ function CourseSection() {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-teal/25 mb-5">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse"></span>
             <span className="text-[11px] font-bold text-teal font-mono tracking-[0.15em]">
               POPULAR COURSES
             </span>

@@ -27,19 +27,8 @@ function Login() {
         navigate("/verify-email");
         return;
       }
-      const userData = await authService.getCurrentUserDetails();
-      console.log("User:", userData);
-      const role = userData?.role?.toLowerCase();
 
-      if (role == "student") {
-        navigate("/dashboard/student");
-      } else if (role == "teacher") {
-        navigate("/dashboard/teacher");
-      } else if (role == "admin") {
-        navigate("/dashboard/admin");
-      } else {
-        setError("User role is missing or invalid");
-      }
+      navigate("/dashboard");
     } catch (error) {
       setError(error?.message || "Unable to sign in");
     } finally {
@@ -48,7 +37,7 @@ function Login() {
   };
 
   return (
-    <div className="glass2 rounded-xl p-8 shadow-[0_32px_80px_rgba(0,0,0,.5)]">
+    <div className="glass2 rounded-xl px-8 py-7 shadow-[0_32px_80px_rgba(0,0,0,.5)]">
       <h1 className="text-2xl font-bold text-center mb-1">Welcome Back</h1>
       <p className="text-sm text-slate text-center mb-8">
         Sign in to continue learning.
