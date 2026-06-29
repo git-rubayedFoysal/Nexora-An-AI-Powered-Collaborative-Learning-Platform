@@ -1,4 +1,7 @@
+import { getGreeting } from "../../../utils/greeting";
+
 function StudentContent({ role, user }) {
+  const greeting = getGreeting();
   return (
     <>
       {/* Greeting */}
@@ -7,7 +10,7 @@ function StudentContent({ role, user }) {
           className="text-2xl font-bold mb-2"
           style={{ fontFamily: "'Outfit',sans-serif" }}
         >
-          Good morning, <span className="gradient-text">{user}</span> 👋
+          Good {greeting}, <span className="gradient-text">{user}</span> 👋
         </h1>
 
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal/10 text-teal border animate-pulse-teal border-teal/25 font-mono">

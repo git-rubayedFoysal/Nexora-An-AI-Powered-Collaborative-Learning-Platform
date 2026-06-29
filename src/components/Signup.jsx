@@ -1,4 +1,4 @@
-import authService from "../services/supabase/auth.service";
+import authService from "../services/supabase/auth/auth.service";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

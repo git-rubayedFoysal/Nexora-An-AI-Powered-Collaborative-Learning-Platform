@@ -3,7 +3,7 @@ import { NavLink } from "react-router"; // kept NavLink (your approach, better t
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import { logout as storeLogout } from "../../features/auth/authSlice";
-import authService from "../../services/supabase/auth.service";
+import authService from "../../services/supabase/auth/auth.service";
 
 /* ─────────────────────────────────────────────
    NAV CONFIG — one source of truth per role
