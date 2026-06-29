@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import authService from "../../services/supabase/auth.service";
+import authService from "../../services/supabase/auth/auth.service";
 import { supabase } from "../../services/supabase/supabaseClient";
 import {
   login as storeLogin,

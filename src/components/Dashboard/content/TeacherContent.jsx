@@ -1,4 +1,7 @@
+import { getGreeting } from "../../../utils/greeting";
+
 function TeacherContent({ role, user }) {
+  const greeting = getGreeting();
   return (
     <>
       <div className="mb-7">
@@ -6,7 +9,7 @@ function TeacherContent({ role, user }) {
           className="text-2xl font-bold mb-2"
           style={{ fontFamily: "'Outfit',sans-serif" }}
         >
-          Good morning, <span className="gradient-text">{user}</span> 📋
+          Good {greeting}, <span className="gradient-text">{user}</span> 📋
         </h1>
         <span class="animate-pulse-amber inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber/10 text-amber border border-amber/25 font-mono">
           ● {role.toUpperCase()}

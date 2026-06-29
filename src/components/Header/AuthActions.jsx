@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { logout as storeLogout } from "../../features/auth/authSlice";
 import AvatarDropdown from "./AvatarDropdown";
 import { Button } from "../index";
-import authService from "../../services/supabase/auth.service";
+import authService from "../../services/supabase/auth/auth.service";
 
 /**
  * AuthActions
