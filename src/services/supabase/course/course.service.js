@@ -43,7 +43,6 @@ class CourseService {
       .from("courses")
       .update({
         ...courseData,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", courseId)
       .select()

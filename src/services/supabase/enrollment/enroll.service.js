@@ -3,7 +3,7 @@ import authService from "../auth/auth.service";
 
 class EnrollService {
   // create course enrollment
-  async enrollCourse(course_id) {
+  async enrollCourse(courseId) {
     // get current user
     const {
       data: { user },
@@ -15,7 +15,7 @@ class EnrollService {
     const { data, error } = await supabase
       .from("enrollments")
       .insert({
-        course_id: course_id,
+        course_id: courseId,
         student_id: user.id,
       })
       .select()
@@ -27,7 +27,7 @@ class EnrollService {
   }
 
   // delete enrollment
-  async unenrollCourse(course_id) {
+  async unenrollCourse(courseId) {
     // get current user
     const {
       data: { user },
@@ -40,14 +40,14 @@ class EnrollService {
       .from("enrollments")
       .delete()
       .eq("student_id", user.id)
-      .eq("course_id", course_id);
+      .eq("course_id", courseId);
 
     if (error) throw error;
     return true;
   }
 
   // Get current user's enrollment for a course
-  async getEnrollment(course_id) {
+  async getEnrollment(courseId) {
     const {
       data: { user },
       error: authError,
@@ -59,7 +59,7 @@ class EnrollService {
       .from("enrollments")
       .select("*")
       .eq("student_id", user.id)
-      .eq("course_id", course_id)
+      .eq("course_id", courseId)
       .maybeSingle();
 
     if (error) throw error;
@@ -87,11 +87,11 @@ class EnrollService {
     return data;
   }
   // Get all enrollments under a course
-  async getCourseEnrollments(course_id) {
+  async getCourseEnrollments(courseId) {
     const { data, error } = await supabase
       .from("enrollments")
       .select("*")
-      .eq("course_id", course_id)
+      .eq("course_id", courseId)
       .order("enrolled_at", { ascending: false });
 
     if (error) throw error;
@@ -99,7 +99,7 @@ class EnrollService {
     return data;
   }
   // update course progress
-  async updateProgress(course_id, progress) {
+  async updateProgress(courseId, progress) {
     const {
       data: { user },
       error: authError,
@@ -116,7 +116,7 @@ class EnrollService {
         status,
       })
       .eq("student_id", user.id)
-      .eq("course_id", course_id)
+      .eq("course_id", courseId)
       .select()
       .single();
 
