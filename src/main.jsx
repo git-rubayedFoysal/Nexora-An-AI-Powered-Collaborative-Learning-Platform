@@ -43,6 +43,20 @@ const route = createBrowserRouter([
         path: "verify-email",
         element: <VerifyEmail />,
       },
+      {
+        path: "courses",
+
+        children: [
+          {
+            index: true,
+            // element: <AllCourses />,
+          },
+          {
+            path: ":courseId",
+            // element: <CourseDetails />,
+          },
+        ],
+      },
     ],
   },
 
@@ -62,10 +76,21 @@ const route = createBrowserRouter([
       },
 
       {
-        path: "courses",
-        // element: <Courses />,
+        path: "my-courses",
+        // element: <MyCourses />,
       },
-
+      {
+        path: "my-learning",
+        // element: <MyLearning />,
+      },
+      {
+        path: "create-course",
+        // element: <CreateCourse />,
+      },
+      {
+        path: "edit-course/:courseId",
+        // element: <EditCourse />,
+      },
       {
         path: "assignments",
         // element: <Assignments />,
@@ -79,6 +104,10 @@ const route = createBrowserRouter([
       {
         path: "profile",
         // element: <Profile />,
+      },
+      {
+        path: "manage-courses",
+        // element: <ManageCourses />,
       },
     ],
   },

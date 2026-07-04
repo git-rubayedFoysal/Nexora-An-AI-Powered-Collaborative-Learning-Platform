@@ -21,7 +21,7 @@ const MENUS = {
           { name: "Dashboard", path: "/dashboard", icon: "🏠" },
           {
             name: "My Courses",
-            path: "/dashboard/courses",
+            path: "/dashboard/my-learning",
             icon: "📚",
             badge: "4",
             badgeColor: "bg-teal/15 text-teal",
@@ -76,7 +76,7 @@ const MENUS = {
           { name: "Dashboard", path: "/dashboard", icon: "🏠" },
           {
             name: "My Courses",
-            path: "/dashboard/courses",
+            path: "/dashboard/my-courses",
             icon: "📚",
             badge: "3",
             badgeColor: "bg-amber/15 text-amber",
@@ -137,7 +137,7 @@ const MENUS = {
           },
           {
             name: "Courses",
-            path: "/dashboard/course",
+            path: "/dashboard/manage-courses",
             icon: "📚",
             badge: "12",
             badgeColor: "bg-amber/15 text-amber",

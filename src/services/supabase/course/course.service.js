@@ -98,6 +98,18 @@ class CourseService {
 
     return data;
   }
+
+  // Get all courses (for admin)
+  async getAllCourses() {
+    const { data, error } = await supabase
+      .from("courses")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return data;
+  }
 }
 
 const courseService = new CourseService();

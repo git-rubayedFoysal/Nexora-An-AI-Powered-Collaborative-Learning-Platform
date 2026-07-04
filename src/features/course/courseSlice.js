@@ -24,6 +24,7 @@ const initialState = {
   selectedCourse: null,
   loading: false,
   error: null,
+  allCourses: [],
 };
 
 // Thunk for creating a course with optional thumbnail upload
@@ -99,6 +100,14 @@ export const fetchTeacherCourses = createAsyncThunk(
   "course/fetchTeacherCourses",
   async () => {
     return await courseService.getTeacherCourses();
+  },
+);
+
+// Thunk for fetching all courses from supabase
+export const fetchAllCourses = createAsyncThunk(
+  "course/fetchAllCourses",
+  async () => {
+    return await courseService.getAllCourses();
   },
 );
 
@@ -185,7 +194,7 @@ const courseSlice = createSlice({
       })
       .addCase(fetchPublishedCourses.fulfilled, (state, action) => {
         state.loading = false;
-        state.courses = action.payload;
+        state.courses = action.payload ?? [];
       })
       .addCase(fetchPublishedCourses.rejected, (state, action) => {
         state.loading = false;
@@ -215,9 +224,23 @@ const courseSlice = createSlice({
       })
       .addCase(fetchTeacherCourses.fulfilled, (state, action) => {
         state.loading = false;
-        state.teacherCourses = action.payload;
+        state.teacherCourses = action.payload ?? [];
       })
       .addCase(fetchTeacherCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+    // fetch all courses
+    builder
+      .addCase(fetchAllCourses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllCourses.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allCourses = action.payload ?? [];
+      })
+      .addCase(fetchAllCourses.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error?.message;
       });
