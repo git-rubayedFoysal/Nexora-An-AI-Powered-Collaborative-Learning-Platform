@@ -16,6 +16,12 @@ import Testimonials from "./Home/Testimonials";
 import Sidebar from "./Dashboard/Sidebar";
 import DashboardHome from "./Dashboard/DashboardHome";
 import DashboardHeader from "./Dashboard/DashboardHeader";
+import Textarea from "./Textarea";
+import Select from "./Select";
+import CourseCard from "./Course/CourseCard";
+import CourseForm from "./Course/CourseForm";
+import ProtectedRoute from "./AuthLayout";
+import RoleRoute from "./ServiceLayout";
 
 export {
   Input,
@@ -36,4 +42,10 @@ export {
   Sidebar,
   DashboardHome,
   DashboardHeader,
+  Textarea,
+  Select,
+  CourseCard,
+  CourseForm,
+  ProtectedRoute,
+  RoleRoute,
 };

@@ -4,13 +4,22 @@ import "./index.css";
 import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store.js";
-import { Home, Login, Signup } from "./pages/index.js";
-import DashboardLayout from "./pages/DashboardLayout.jsx";
-import { DashboardHome } from "./components/index.js";
+import {
+  Home,
+  Login,
+  Signup,
+  DashboardLayout,
+  VerifyEmail,
+  ErrorPage,
+  CreateCourse,
+  EditCourse,
+} from "./pages/index.js";
+import {
+  DashboardHome,
+  ProtectedRoute,
+  RoleRoute,
+} from "./components/index.js";
 import AuthInitializer from "./features/auth/AuthInitializer.js";
-import ProtectedRoute from "./components/AuthLayout.jsx";
-import VerifyEmail from "./pages/VerifyEmail.jsx";
-import ErrorPage from "./pages/ErrorPage.jsx";
 
 // Define the routes for the application using React Router
 const route = createBrowserRouter([
@@ -65,7 +74,7 @@ const route = createBrowserRouter([
     path: "dashboard",
     element: (
       <ProtectedRoute requireAuth>
-        <DashboardLayout />,
+        <DashboardLayout />
       </ProtectedRoute>
     ),
     errorElement: <ErrorPage />,
@@ -85,11 +94,19 @@ const route = createBrowserRouter([
       },
       {
         path: "create-course",
-        // element: <CreateCourse />,
+        element: (
+          <RoleRoute allowedRoles={["teacher", "admin"]}>
+            <CreateCourse />
+          </RoleRoute>
+        ),
       },
       {
         path: "edit-course/:courseId",
-        // element: <EditCourse />,
+        element: (
+          <RoleRoute allowedRoles={["teacher", "admin"]}>
+            <EditCourse />
+          </RoleRoute>
+        ),
       },
       {
         path: "assignments",
