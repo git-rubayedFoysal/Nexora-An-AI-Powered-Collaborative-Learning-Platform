@@ -13,7 +13,7 @@ function StudentContent({ role, user }) {
           Good {greeting}, <span className="gradient-text">{user}</span> 👋
         </h1>
 
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal/10 text-teal border animate-pulse-teal border-teal/25 font-mono">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal/10 text-teal border animate-pulse-teal border-teal/25 font-mono">
           ● {role.toUpperCase()}
         </span>
       </div>

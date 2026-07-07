@@ -25,7 +25,7 @@ function SearchBar({
     <div className={`relative ${className}`}>
       {/* Magnifier icon — non-interactive, sits on top of the input */}
       <svg
-        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8892a4] pointer-events-none"
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate pointer-events-none"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -42,7 +42,7 @@ function SearchBar({
         type="search"
         placeholder={placeholder}
         className={`pl-9 pr-4 py-2 rounded-lg text-sm
-                   bg-white/5 border border-white/8 text-white placeholder:text-[#545d72]
+                   bg-white/5 border border-white/8 text-white placeholder:text-slate-dark
                    outline-none transition-all
                    focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20
                    ${inputClass}`}

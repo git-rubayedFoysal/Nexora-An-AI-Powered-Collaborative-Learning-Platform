@@ -44,7 +44,7 @@ function Testimonials() {
             </span>
           </div>
           <h2 className="text-4xl font-black font-[Outfit]">
-            Loved by <span class="gradient-text">learners</span>
+            Loved by <span className="gradient-text">learners</span>
           </h2>
         </div>
 

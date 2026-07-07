@@ -13,11 +13,15 @@ import {
   ErrorPage,
   CreateCourse,
   EditCourse,
+  PublicCourses,
+  CourseDetails,
 } from "./pages/index.js";
 import {
   DashboardHome,
   ProtectedRoute,
   RoleRoute,
+  MyCourses,
+  ManageCourses,
 } from "./components/index.js";
 import AuthInitializer from "./features/auth/AuthInitializer.js";
 
@@ -58,11 +62,11 @@ const route = createBrowserRouter([
         children: [
           {
             index: true,
-            // element: <AllCourses />,
+            element: <PublicCourses />,
           },
           {
             path: ":courseId",
-            // element: <CourseDetails />,
+            element: <CourseDetails />,
           },
         ],
       },
@@ -86,7 +90,19 @@ const route = createBrowserRouter([
 
       {
         path: "my-courses",
-        // element: <MyCourses />,
+        element: (
+          <RoleRoute allowedRoles={["teacher"]}>
+            <MyCourses />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "manage-courses",
+        element: (
+          <RoleRoute allowedRoles={["admin"]}>
+            <ManageCourses />
+          </RoleRoute>
+        ),
       },
       {
         path: "my-learning",
@@ -95,7 +111,7 @@ const route = createBrowserRouter([
       {
         path: "create-course",
         element: (
-          <RoleRoute allowedRoles={["teacher", "admin"]}>
+          <RoleRoute allowedRoles={["teacher"]}>
             <CreateCourse />
           </RoleRoute>
         ),

@@ -1,5 +1,5 @@
-import { useMemo } from "react"; // FIX 1: removed useState — not needed
-import { NavLink } from "react-router"; // kept NavLink (your approach, better than keys)
+import { useMemo } from "react";
+import { NavLink } from "react-router";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import { logout as storeLogout } from "../../features/auth/authSlice";
@@ -7,20 +7,21 @@ import authService from "../../services/supabase/auth/auth.service";
 
 /* ─────────────────────────────────────────────
    NAV CONFIG — one source of truth per role
-   Defined outside the component so the object
-   is never re-created on every render.
 ───────────────────────────────────────────── */
 
 const MENUS = {
   student: {
+    // Active item: bg + text color + left border — only the matched item gets this
     accentClass: "bg-teal/10 text-teal border-l-2 border-teal",
     sections: [
       {
         title: "MAIN",
         items: [
-          { name: "Dashboard", path: "/dashboard", icon: "🏠" },
+          // FIX: end={true} so /dashboard only activates on exact match,
+          // not on every child route like /dashboard/my-learning
+          { name: "Dashboard", path: "/dashboard", icon: "🏠", end: true },
           {
-            name: "My Courses",
+            name: "My Learning",
             path: "/dashboard/my-learning",
             icon: "📚",
             badge: "4",
@@ -68,12 +69,12 @@ const MENUS = {
   },
 
   teacher: {
-    accentClass: "bg-amber/10 text-amber border-l-2 border-amber", // FIX 4: amber accent, not teal
+    accentClass: "bg-amber/10 text-amber border-l-2 border-amber",
     sections: [
       {
         title: "TEACHING",
         items: [
-          { name: "Dashboard", path: "/dashboard", icon: "🏠" },
+          { name: "Dashboard", path: "/dashboard", icon: "🏠", end: true },
           {
             name: "My Courses",
             path: "/dashboard/my-courses",
@@ -122,12 +123,12 @@ const MENUS = {
   },
 
   admin: {
-    accentClass: "bg-coral/10 text-coral border-l-2 border-coral", // FIX 4: coral accent
+    accentClass: "bg-coral/10 text-coral border-l-2 border-coral",
     sections: [
       {
         title: "PLATFORM",
         items: [
-          { name: "Dashboard", path: "/dashboard", icon: "🏠" },
+          { name: "Dashboard", path: "/dashboard", icon: "🏠", end: true },
           {
             name: "Users",
             path: "/dashboard/users",
@@ -171,13 +172,23 @@ const MENUS = {
 /**
  * Sidebar
  * -------
- * Role-based sidebar navigation for Nexora LMS.
- * Uses React Router's <NavLink> for active-route detection.
+ * Role-based sidebar for Nexora LMS.
+ *
+ * FIX: NavLink className now has three states:
+ *   1. isActive  → accentClass  (bg + text color + left border)
+ *   2. isPending → subtle pulse (optional, good for slow loaders)
+ *   3. default   → text-slate + hover only — NO background
+ *
+ * The key insight: inactive items must have NO background class at all.
+ * Previously "text-slate hover:text-white hover:bg-white/6" was correct
+ * but the accentClass was also applying to parent routes because Dashboard
+ * path="/dashboard" matched every /dashboard/* route.
+ * Fixed by adding end={true} to the Dashboard item in every role config.
  *
  * Props:
- *  - role     : 'student' | 'teacher' | 'admin'
- *  - isOpen   : boolean  — mobile slide-in state (controlled by parent / Header)
- *  - onClose  : () => void — called when backdrop or a nav link is tapped on mobile
+ *  - role    : 'student' | 'teacher' | 'admin'
+ *  - isOpen  : boolean        — mobile slide-in state
+ *  - onClose : () => void     — collapse sidebar on mobile nav / backdrop tap
  */
 function Sidebar({ role = "student", isOpen = false, onClose }) {
   const dispatch = useDispatch();
@@ -196,10 +207,7 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
 
   return (
     <>
-      {/*
-       * Mobile backdrop overlay — tapping it closes the sidebar.
-       * Only rendered when isOpen is true on small screens.
-       */}
+      {/* Mobile backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden"
@@ -211,18 +219,12 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
         className={[
           "fixed left-0 bottom-0 w-55 bg-navy-2",
           "border-r border-white/6 pt-4 pb-6 overflow-y-auto flex flex-col z-40 top-16 lg:top-0",
-          // Mobile: slide in/out via transform; desktop: always visible
           "transition-transform duration-200 lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         ].join(" ")}
       >
         <nav className="px-3 space-y-1 flex-1">
           {config.sections.map((section) => (
-            /*
-             * FIX 2: was <key="..."> on a Fragment (<>) — React silently
-             * ignores keys on fragments, causing list-key warnings in dev.
-             * Replaced with a real <div key={...}>.
-             */
             <div key={section.title}>
               <div className="px-2 text-[10px] font-black text-slate-dark uppercase tracking-widest mb-2 mt-4 font-mono first:mt-2">
                 {section.title}
@@ -233,9 +235,22 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
                   key={item.path}
                   to={item.path}
                   onClick={onClose}
+                  /*
+                   * FIX: `end` prop forwarded from item config.
+                   * Dashboard items have end={true} so /dashboard only
+                   * activates on the exact path, not on every child route.
+                   * All other items default to end={false} (NavLink default).
+                   */
+                  end={item.end ?? false}
                   className={({ isActive }) =>
                     [
-                      "nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                      "nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl",
+                      "text-sm font-medium transition-colors",
+                      /*
+                       * FIX: active → full accentClass (bg + color + border).
+                       * inactive → text-slate + hover only, zero background.
+                       * This ensures only the matched item is highlighted.
+                       */
                       isActive
                         ? config.accentClass
                         : "text-slate hover:text-white hover:bg-white/6",
@@ -256,11 +271,13 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
             </div>
           ))}
 
-          {/* Sign out — always at the bottom */}
+          {/* Sign out */}
           <div className="mt-4">
             <button
               onClick={handleLogout}
-              className="nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate hover:text-white hover:bg-white/6 transition-colors cursor-pointer"
+              className="nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
+                         text-sm font-medium text-slate hover:text-white hover:bg-white/6
+                         transition-colors cursor-pointer"
             >
               <span className="text-base leading-none">🚪</span>
               Sign out

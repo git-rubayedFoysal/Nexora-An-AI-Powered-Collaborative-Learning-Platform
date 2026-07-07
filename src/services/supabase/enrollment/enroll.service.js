@@ -5,12 +5,11 @@ class EnrollService {
   // create course enrollment
   async enrollCourse(courseId) {
     // get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await authService.getUser();
+    const user = await authService.getUser();
 
-    if (authError) throw authError;
+    if (!user) {
+      throw new Error("User not found.");
+    }
 
     const { data, error } = await supabase
       .from("enrollments")
@@ -29,12 +28,11 @@ class EnrollService {
   // delete enrollment
   async unenrollCourse(courseId) {
     // get current user
-    const {
-      data: { user },
-      error: authError,
-    } = await authService.getUser();
+    const user = await authService.getUser();
 
-    if (authError) throw authError;
+    if (!user) {
+      throw new Error("User not found.");
+    }
 
     const { error } = await supabase
       .from("enrollments")
@@ -48,12 +46,11 @@ class EnrollService {
 
   // Get current user's enrollment for a course
   async getEnrollment(courseId) {
-    const {
-      data: { user },
-      error: authError,
-    } = await authService.getUser();
+    const user = await authService.getUser();
 
-    if (authError) throw authError;
+    if (!user) {
+      throw new Error("User not found.");
+    }
 
     const { data, error } = await supabase
       .from("enrollments")
@@ -69,12 +66,11 @@ class EnrollService {
 
   // Get all enorll course of a student's
   async getMyEnrollments() {
-    const {
-      data: { user },
-      error: authError,
-    } = await authService.getUser();
+    const user = await authService.getUser();
 
-    if (authError) throw authError;
+    if (!user) {
+      throw new Error("User not found.");
+    }
 
     const { data, error } = await supabase
       .from("enrollments")
@@ -100,12 +96,11 @@ class EnrollService {
   }
   // update course progress
   async updateProgress(courseId, progress) {
-    const {
-      data: { user },
-      error: authError,
-    } = await authService.getUser();
+    const user = await authService.getUser();
 
-    if (authError) throw authError;
+    if (!user) {
+      throw new Error("User not found.");
+    }
 
     const status = progress >= 100 ? "completed" : "active";
 

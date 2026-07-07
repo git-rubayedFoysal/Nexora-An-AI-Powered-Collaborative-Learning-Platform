@@ -3,18 +3,30 @@ import courseService from "../../services/supabase/course/course.service";
 import courseStorage from "../../services/supabase/course/course.storage";
 import authService from "../../services/supabase/auth/auth.service";
 
-// Function to create a unique path for the thumbnail file
+// Generate unique thumbnail storage path
 async function generateThumbnailPath(thumbnailFile) {
-  // Get current teacher
-  const {
-    data: { user },
-    error,
-  } = await authService.getUser();
+  if (!thumbnailFile) {
+    throw new Error("Thumbnail file is required.");
+  }
 
-  if (error) throw error;
+  // Get authenticated user
+  const user = await authService.getUser();
 
-  // Create storage path
-  return `${user.id}/${Date.now()}-${thumbnailFile.name}`;
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  // Extract extension
+  const extension = thumbnailFile.name.split(".").pop()?.toLowerCase();
+
+  // Sanitize filename (remove spaces & special characters)
+  const fileName = thumbnailFile.name
+    .replace(/\.[^/.]+$/, "") // remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, "-") // replace invalid chars
+    .toLowerCase();
+
+  // Generate unique path
+  return `${user.id}/${Date.now()}-${fileName}.${extension}`;
 }
 
 // Initial state for the course slice
@@ -25,6 +37,11 @@ const initialState = {
   loading: false,
   error: null,
   allCourses: [],
+
+  totalCourses: 0,
+  publishedCourses: 0,
+  draftCourses: 0,
+  archivedCourses: 0,
 };
 
 // Thunk for creating a course with optional thumbnail upload
@@ -108,6 +125,14 @@ export const fetchAllCourses = createAsyncThunk(
   "course/fetchAllCourses",
   async () => {
     return await courseService.getAllCourses();
+  },
+);
+
+// Thunk for fetching course statistics from supabase
+export const fetchCourseStats = createAsyncThunk(
+  "course/fetchCourseStats",
+  async () => {
+    return await courseService.getCourseStats();
   },
 );
 
@@ -244,6 +269,13 @@ const courseSlice = createSlice({
         state.loading = false;
         state.error = action.error?.message;
       });
+    // fetch course statistics
+    builder.addCase(fetchCourseStats.fulfilled, (state, action) => {
+      state.totalCourses = action.payload.totalCourses;
+      state.publishedCourses = action.payload.publishedCourses;
+      state.draftCourses = action.payload.draftCourses;
+      state.archivedCourses = action.payload.archivedCourses;
+    });
   },
 });
 

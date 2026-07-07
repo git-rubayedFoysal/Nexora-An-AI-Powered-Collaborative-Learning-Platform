@@ -11,17 +11,8 @@ function DashboardLayout() {
   };
 
   const user = useSelector((state) => state.auth.userData);
-  const loading = useSelector((state) => state.auth.isLoading);
   const role = user?.role || "teacher";
   const name = user?.full_name || "user";
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-navy flex items-center justify-center text-white">
-        Loading...
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-navy text-white flex">

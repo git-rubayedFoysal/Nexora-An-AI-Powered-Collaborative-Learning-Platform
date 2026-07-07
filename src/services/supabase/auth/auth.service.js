@@ -110,6 +110,19 @@ class AuthService {
       callback(event, session);
     });
   }
+  // Get user statistics (total users, students, teachers, admins)
+  async getUserStats() {
+    const { data, error } = await supabase.from("users").select("role");
+
+    if (error) throw error;
+
+    return {
+      totalUsers: data.length,
+      totalStudents: data.filter((user) => user.role === "student").length,
+      totalTeachers: data.filter((user) => user.role === "teacher").length,
+      totalAdmins: data.filter((user) => user.role === "admin").length,
+    };
+  }
 }
 
 const authService = new AuthService();

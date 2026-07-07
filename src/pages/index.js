@@ -6,6 +6,8 @@ import VerifyEmail from "./VerifyEmail";
 import ErrorPage from "./ErrorPage";
 import DashboardLayout from "./DashboardLayout";
 import EditCourse from "./Course/EditCourse";
+import PublicCourses from "./Course/PublicCourses";
+import CourseDetails from "./Course/CourseDetails";
 
 export {
   Home,
@@ -16,4 +18,6 @@ export {
   ErrorPage,
   DashboardLayout,
   EditCourse,
+  PublicCourses,
+  CourseDetails,
 };

@@ -20,7 +20,14 @@ function Select({ options, label, className = "", ...props }, ref) {
         {...props}
       >
         {options?.map((option) => (
-          <option key={option} value={option}>
+          <option
+            style={{
+              backgroundColor: "var(--color-navy-3)",
+              color: "#e8eaf6",
+            }}
+            key={option}
+            value={option}
+          >
             {option}
           </option>
         ))}

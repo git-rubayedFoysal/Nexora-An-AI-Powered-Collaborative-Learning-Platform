@@ -1,10 +1,23 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import authService from "../../services/supabase/auth/auth.service";
+
+export const fetchUserStats = createAsyncThunk(
+  "auth/fetchUserStats",
+  async () => {
+    return await authService.getUserStats();
+  },
+);
 
 // Initial state for the auth slice
 const initialState = {
   userData: null, // user data object (e.g., email, id, etc.)
   isAuthenticated: false, // is user already login?
   isLoading: true, // is authentication process loading?
+
+  totalUsers: 0,
+  totalStudents: 0,
+  totalTeachers: 0,
+  totalAdmins: 0,
 };
 
 const authSlice = createSlice({
@@ -27,6 +40,14 @@ const authSlice = createSlice({
     setLoading: (state, action) => {
       state.isLoading = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(fetchUserStats.fulfilled, (state, action) => {
+      state.totalUsers = action.payload.totalUsers;
+      state.totalStudents = action.payload.totalStudents;
+      state.totalTeachers = action.payload.totalTeachers;
+      state.totalAdmins = action.payload.totalAdmins;
+    });
   },
 });
 

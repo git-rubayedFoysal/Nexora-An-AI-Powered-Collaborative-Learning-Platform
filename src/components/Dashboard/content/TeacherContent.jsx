@@ -1,7 +1,27 @@
 import { getGreeting } from "../../../utils/greeting";
+import { fetchCourseStats } from "../../../features/course/courseSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
+import { LoadingState } from "../../index";
 
 function TeacherContent({ role, user }) {
   const greeting = getGreeting();
+  const dispatch = useDispatch();
+  const nevigate = useNavigate();
+
+  const { publishedCourses, loading } = useSelector((state) => state.course);
+
+  const courseCount = publishedCourses?.length;
+
+  useEffect(() => {
+    dispatch(fetchCourseStats());
+  }, [dispatch]);
+
+  if (loading) {
+    return <LoadingState color="--color-amber" content="Dashboard..." />;
+  }
+
   return (
     <>
       <div className="mb-7">
@@ -11,7 +31,7 @@ function TeacherContent({ role, user }) {
         >
           Good {greeting}, <span className="gradient-text">{user}</span> 📋
         </h1>
-        <span class="animate-pulse-amber inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber/10 text-amber border border-amber/25 font-mono">
+        <span className="animate-pulse-amber inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber/10 text-amber border border-amber/25 font-mono">
           ● {role.toUpperCase()}
         </span>
       </div>
@@ -21,7 +41,7 @@ function TeacherContent({ role, user }) {
         {[
           {
             icon: "📚",
-            value: "3",
+            value: `${courseCount}`,
             label: "Active courses",
             sub: "87 students enrolled",
             subColor: "text-slate-dark",
@@ -73,14 +93,15 @@ function TeacherContent({ role, user }) {
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
         {[
-          { icon: "➕", label: "New Course" },
-          { icon: "📝", label: "New Assignment" },
-          { icon: "❓", label: "Build Quiz" },
-          { icon: "🎨", label: "Whiteboard" },
+          { icon: "➕", label: "New Course", path: "/dashboard/create-course" },
+          { icon: "📝", label: "New Assignment", path: "/dashboard" },
+          { icon: "❓", label: "Build Quiz", path: "/dashboard" },
+          { icon: "🎨", label: "Whiteboard", path: "/dashboard" },
         ].map((a) => (
           <button
             key={a.label}
-            className="feature-card glass rounded-2xl p-4 text-center border border-white/6"
+            className="feature-card glass rounded-2xl p-4 text-center border border-white/6 cursor-pointer"
+            onClick={() => nevigate(a.path)}
           >
             <div className="text-2xl mb-2">{a.icon}</div>
             <div className="text-xs font-semibold text-slate">{a.label}</div>
