@@ -101,6 +101,10 @@ body {
   animation: shimmer 4s ease infinite;
 }
 
+button {
+  cursor: pointer;
+}
+
 .glass {
   background: var(--color-glass);
   backdrop-filter: blur(20px);

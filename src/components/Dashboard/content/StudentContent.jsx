@@ -1,7 +1,18 @@
 import { getGreeting } from "../../../utils/greeting";
+import { fetchMyEnrollments } from "../../../features/enroll/enrollSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
 
 function StudentContent({ role, user }) {
   const greeting = getGreeting();
+  const dispatch = useDispatch();
+  const { totalCourses } = useSelector((state) => state.enroll);
+
+  // const enrollCount = myEnrollments.length ?? 0;
+
+  useEffect(() => {
+    dispatch(fetchMyEnrollments({}));
+  }, [dispatch]);
   return (
     <>
       {/* Greeting */}
@@ -23,7 +34,7 @@ function StudentContent({ role, user }) {
         {[
           {
             icon: "📚",
-            value: "4",
+            value: `${totalCourses}`,
             label: "Enrolled courses",
             sub: "↑ 1 this month",
             subColor: "text-emerald-400",

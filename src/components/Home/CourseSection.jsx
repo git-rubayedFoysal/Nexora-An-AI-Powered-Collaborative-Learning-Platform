@@ -1,16 +1,16 @@
 import { Link } from "react-router";
 import { CourseCard } from "../index";
-import { fetchPublishedCourses } from "../../features/course/courseSlice";
+import { fetchFeatureCourses } from "../../features/course/courseSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 
 function CourseSection() {
   const dispatch = useDispatch();
 
-  const { courses } = useSelector((state) => state.course);
+  const { featureCourses } = useSelector((state) => state.course);
 
   useEffect(() => {
-    dispatch(fetchPublishedCourses());
+    dispatch(fetchFeatureCourses());
   }, [dispatch]);
 
   return (
@@ -37,7 +37,7 @@ function CourseSection() {
           id="course-grid"
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
         >
-          {courses.slice(0, 6).map((course) => (
+          {featureCourses.map((course) => (
             <Link to={`/courses/${course.id}`} key={course.id}>
               <CourseCard course={course} variant="guest" />
             </Link>

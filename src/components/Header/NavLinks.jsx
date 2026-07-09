@@ -21,7 +21,7 @@ function NavLinks({ links }) {
           key={item.slug}
           onClick={() => navigate("/")}
           href={item.slug}
-          className="relative text-sm font-medium text-slate hover:text-white transition-colors
+          className="relative text-sm font-mono font-bold text-slate hover:text-white transition-colors
                      after:absolute after:-bottom-0.5 after:left-0 after:h-0.5 after:w-0
                      after:rounded-full after:bg-linear-to-r after:from-violet-500 after:to-teal-400
                      after:transition-[width] after:duration-250 hover:after:w-full"

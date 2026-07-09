@@ -37,7 +37,7 @@ function CourseCard({
   return (
     <div className="course-card glass rounded-2xl overflow-hidden border border-border flex flex-col">
       {/* ── Thumbnail ── */}
-      <div className="relative max-h-50 overflow-hidden">
+      <div className="relative h-48 overflow-hidden">
         <img
           src={publicUrl}
           alt={course.title}
@@ -78,7 +78,7 @@ function CourseCard({
         {/* Title */}
         <h3
           className="text-base font-bold text-white leading-snug line-clamp-2
-                       font-display"
+                       font-display min-h-14"
         >
           {course.title ?? "Untitled Course"}
         </h3>

@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { Button } from "../index";
-import SearchBar from "./SearchBar";
 
 /**
  * MobileMenu
@@ -35,13 +34,7 @@ function MobileMenu({ isOpen, links, onClose }) {
       ].join(" ")}
     >
       <div className="border-t border-white/6 px-4 py-4 space-y-1">
-        {/* ── Mobile search bar ── */}
-        <SearchBar
-          placeholder="Search courses…"
-          className="mb-3"
-          inputClass="w-full"
-        />
-
+        
         {/* ── Nav links ── */}
         {links.map((item) => (
           <a

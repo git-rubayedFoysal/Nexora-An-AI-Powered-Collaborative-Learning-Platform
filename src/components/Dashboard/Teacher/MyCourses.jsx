@@ -11,14 +11,20 @@ import {
   DeleteConfirmModal,
   LoadingState,
   EmptyState,
+  SearchBar,
 } from "../../index";
 
 function MyCourses() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const { teacherCourses, loading } = useSelector((state) => state.course);
+  const { teacherCourses, loading, totalCourses } = useSelector(
+    (state) => state.course,
+  );
 
   const handelClick = () => navigate("/dashboard/create-course");
 
@@ -35,18 +41,30 @@ function MyCourses() {
     }
   }
 
+  // Fetch courses when the page changes
   useEffect(() => {
-    dispatch(fetchTeacherCourses());
-  }, [dispatch]);
+    dispatch(fetchTeacherCourses({ page, search: debouncedSearch }));
+  }, [dispatch, page, debouncedSearch]);
 
-  if (loading) {
-    return <LoadingState color="--color-violet" content="course..." />;
-  }
+  // Fetch courses when the search term changes, with a debounce of 300ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage((prev) => (prev === 1 ? prev : 1));
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Handle "Load More" button click
+  const handleLoadMore = () => {
+    setPage((prev) => prev + 1);
+  };
 
   return (
-    <>
+    <div className="mb-8">
       {/* ── Page heading ── */}
-      <div className="mb-7 flex items-center justify-between">
+      <div className="mb-12 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-4 font-display">
             My <span className="gradient-text">Courses</span>
@@ -59,6 +77,15 @@ function MyCourses() {
             ● TEACHER
           </span>
         </div>
+
+        <div className="max-w-xs w-full">
+          <SearchBar
+            placeholder="Search courses..."
+            value={search}
+            onChange={setSearch}
+          />
+        </div>
+
         <Button
           onClick={handelClick}
           className="btn-ghost flex items-center gap-2 bg-amber/10 text-amber
@@ -81,7 +108,9 @@ function MyCourses() {
         </Button>
       </div>
 
-      {teacherCourses.length === 0 && (
+      {loading && <LoadingState color="--color-violet" content="courses..." />}
+
+      {teacherCourses.length === 0 && !loading ? (
         <EmptyState
           icon="🎓"
           title="You haven't created any courses yet."
@@ -90,23 +119,39 @@ function MyCourses() {
           noButton={false}
           onButtonClick={handelClick}
         />
+      ) : (
+        <>
+          {/* ── Course grid ── */}
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {teacherCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                variant="teacher"
+                onView={() => navigate(`/courses/${course.id}`)}
+                onEdit={() => navigate(`/dashboard/edit-course/${course.id}`)}
+                // FIX: removed duplicate onDelete — the second one was overriding
+                // this one with an empty function, so setDeleteTarget never ran
+                onDelete={() => setDeleteTarget(course)}
+              />
+            ))}
+          </div>
+        </>
       )}
 
-      {/* ── Course grid ── */}
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-        {teacherCourses.map((course) => (
-          <CourseCard
-            key={course.id}
-            course={course}
-            variant="teacher"
-            onView={() => navigate(`/courses/${course.id}`)}
-            onEdit={() => navigate(`/dashboard/edit-course/${course.id}`)}
-            // FIX: removed duplicate onDelete — the second one was overriding
-            // this one with an empty function, so setDeleteTarget never ran
-            onDelete={() => setDeleteTarget(course)}
-          />
-        ))}
-      </div>
+      {/* Load more button */}
+      {!loading &&
+        teacherCourses.length > 0 &&
+        teacherCourses.length < totalCourses && (
+          <div className="text-center mt-8">
+            <button
+              onClick={handleLoadMore}
+              className="px-4 py-2 rounded-lg border-2 border-teal text-teal font-bold font-mono hover:bg-teal-dim hover:text-white transition-colors"
+            >
+              Load More
+            </button>
+          </div>
+        )}
 
       {/*
        * FIX: moved outside the map — one modal for the whole page.
@@ -120,7 +165,7 @@ function MyCourses() {
         itemName={deleteTarget?.title}
         loading={loading}
       />
-    </>
+    </div>
   );
 }
 

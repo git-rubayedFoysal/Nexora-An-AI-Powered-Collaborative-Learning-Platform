@@ -12,7 +12,7 @@ function TeacherContent({ role, user }) {
 
   const { publishedCourses, loading } = useSelector((state) => state.course);
 
-  const courseCount = publishedCourses?.length;
+  const courseCount = publishedCourses;
 
   useEffect(() => {
     dispatch(fetchCourseStats());

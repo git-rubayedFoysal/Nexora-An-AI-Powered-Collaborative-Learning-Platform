@@ -15,12 +15,15 @@ import {
   EditCourse,
   PublicCourses,
   CourseDetails,
+  Checkout,
+  EnrollmentSuccess,
 } from "./pages/index.js";
 import {
   DashboardHome,
   ProtectedRoute,
   RoleRoute,
   MyCourses,
+  MyLearning,
   ManageCourses,
 } from "./components/index.js";
 import AuthInitializer from "./features/auth/AuthInitializer.js";
@@ -68,7 +71,15 @@ const route = createBrowserRouter([
             path: ":courseId",
             element: <CourseDetails />,
           },
+          {
+            path: ":courseId/checkout",
+            element: <Checkout />,
+          },
         ],
+      },
+      {
+        path: "enrollment-success",
+        element: <EnrollmentSuccess />,
       },
     ],
   },
@@ -106,7 +117,11 @@ const route = createBrowserRouter([
       },
       {
         path: "my-learning",
-        // element: <MyLearning />,
+        element: (
+          <RoleRoute allowedRoles={["student"]}>
+            <MyLearning />
+          </RoleRoute>
+        ),
       },
       {
         path: "create-course",

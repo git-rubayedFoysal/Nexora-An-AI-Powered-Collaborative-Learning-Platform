@@ -3,11 +3,14 @@ import enrollService from "../../services/supabase/enrollment/enroll.service";
 
 // Initial state for the enrollment slice
 const initialState = {
-  myEnrollments: [],
-  courseEnrollments: [],
-  currentEnrollment: null,
-  loading: false,
-  error: null,
+  myEnrollments: [], // List of courses the student is enrolled in
+  courseEnrollments: [], // List of students enrolled in a specific course
+  currentEnrollment: null, // Current enrollment for a specific course
+  loading: false, // Loading state for async actions
+  error: null, // Error message for async actions
+
+  // pagination state
+  totalCourses: 0,
 };
 
 // Thunk for enrollCourse
@@ -38,8 +41,8 @@ export const fetchEnrollment = createAsyncThunk(
 // Thunk for fetch my enrollments
 export const fetchMyEnrollments = createAsyncThunk(
   "enroll/fetchMyEnrollments",
-  async () => {
-    return await enrollService.getMyEnrollments();
+  async ({ page = 1}) => {
+    return await enrollService.getMyEnrollments({ page });
   },
 );
 
@@ -125,7 +128,18 @@ const enrollSlice = createSlice({
       })
       .addCase(fetchMyEnrollments.fulfilled, (state, action) => {
         state.loading = false;
-        state.myEnrollments = action.payload ?? [];
+        const { courses, total } = action.payload;
+        const { page } = action.meta.arg;
+
+        if (page === 1) {
+          // Initial load or new search
+          state.myEnrollments = courses ?? [];
+        } else {
+          // Load More
+          state.myEnrollments = [...state.myEnrollments, ...(courses ?? [])];
+        }
+
+        state.totalCourses = total;
       })
       .addCase(fetchMyEnrollments.rejected, (state, action) => {
         state.loading = false;

@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { Logo } from "../index";
 
 import NavLinks from "./NavLinks";
-import SearchBar from "./SearchBar";
 import GuestActions from "./GuestActions";
 import AuthActions from "./AuthActions";
 import MobileMenu from "./MobileMenu";
@@ -73,28 +72,16 @@ function Header() {
       <div className="glass border-b border-white/6">
         {/* start auth nav */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-17 gap-4">
-            {/* ── Logo ── */}
-            <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <Logo />
-            </Link>
+          <div className="flex items-center h-17 gap-4 justify-between">
+            <div className="flex items-center gap-14">
+              {/* ── Logo ── */}
+              <Link to="/" className="flex items-center gap-2.5 shrink-0">
+                <Logo />
+              </Link>
 
-            {/* ── Desktop guest nav links ── */}
-            {!authStatus && <NavLinks links={navLinks} />}
-
-            {/* ── Authenticated: centre search ── */}
-            {authStatus && (
-              <div className="flex-1 hidden lg:flex justify-center px-6">
-                <SearchBar
-                  placeholder="Search courses, topics…"
-                  className="w-full max-w-sm"
-                  inputClass="w-full"
-                />
-              </div>
-            )}
-
-            {/* ── Spacer (guest, desktop) ── */}
-            {!authStatus && <div className="flex-1" />}
+              {/* ── Desktop guest nav links ── */}
+              <NavLinks links={navLinks} />
+            </div>
 
             {/* ══════════════════════════════════
                 RIGHT SIDE — GUEST

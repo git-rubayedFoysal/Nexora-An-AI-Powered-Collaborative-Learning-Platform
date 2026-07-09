@@ -2,8 +2,12 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router";
 import { fetchCourse } from "../../features/course/courseSlice";
+import {
+  fetchCourseEnrollments,
+  fetchEnrollment,
+} from "../../features/enroll/enrollSlice";
 import courseStorage from "../../services/supabase/course/course.storage";
-import { LoadingState } from "../../components/index";
+import { LoadingState } from "../../components";
 
 /* ── small helpers ── */
 function InfoChip({ icon, label }) {
@@ -32,10 +36,22 @@ function CourseDetails() {
   const navigate = useNavigate();
 
   const { selectedCourse: course, loading } = useSelector((s) => s.course);
+  const { courseEnrollments, currentEnrollment } = useSelector((s) => s.enroll);
   const { userData } = useSelector((s) => s.auth);
 
   useEffect(() => {
     dispatch(fetchCourse(courseId));
+    dispatch(fetchEnrollment(courseId));
+  }, [dispatch, courseId]);
+
+  const isTeacher = userData?.id === course?.teacher_id;
+  const isAdmin = userData?.role?.toLowerCase() === "admin";
+  const isStudent = userData?.role?.toLowerCase() === "student";
+  const isFree = !course?.price || course?.price === 0;
+
+  // Fetch enrolled students only when the viewer is teacher or admin
+  useEffect(() => {
+    dispatch(fetchCourseEnrollments(courseId));
   }, [dispatch, courseId]);
 
   /* ── Loading ── */
@@ -47,16 +63,27 @@ function CourseDetails() {
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
     : "/placeholder-course.png";
 
-  const isTeacher = userData?.id === course.teacher_id;
-  const isFree = !course.price || course.price === 0;
+  const statusCfg =
+    {
+      published: {
+        label: "Published",
+        cls: "bg-teal/15 text-teal border-teal/25",
+      },
+      draft: { label: "Draft", cls: "bg-amber/15 text-amber border-amber/25" },
+      archived: {
+        label: "Archived",
+        cls: "bg-glass-2 text-slate border-border",
+      },
+    }[course.status?.toLowerCase()] ?? null;
 
+  const studentCount = courseEnrollments.length ?? 0;
   return (
-    <div className="max-w-5xl mx-auto pt-25">
+    <div className="max-w-5xl mx-auto mt-20">
       {/* ── Breadcrumb ── */}
       <div className="flex items-center gap-2 text-xs text-slate-dark font-mono mb-6">
         <button
           onClick={() => navigate("/courses")}
-          className="hover:text-slate transition-colors cursor-pointer"
+          className="hover:text-slate transition-colors"
         >
           Courses
         </button>
@@ -88,7 +115,7 @@ function CourseDetails() {
               onError={(e) => {
                 e.currentTarget.src = "/placeholder-course.png";
               }}
-              className="w-full h-65 sm:h-72 object-cover brightness-90"
+              className="w-full h-56 sm:h-72 object-cover brightness-90"
             />
             {/* scrim */}
             <div
@@ -96,15 +123,26 @@ function CourseDetails() {
                             bg-linear-to-t from-navy-2 to-transparent"
             />
 
-            {/* price over thumbnail */}
-            <div className="absolute bottom-4 left-4">
+            {/* status chip */}
+            {statusCfg && !isStudent && (
               <span
-                className={`text-2xl font-black font-mono
-                ${isFree ? "text-teal" : "text-amber"}`}
+                className={`absolute top-4 right-4 tag border font-mono ${statusCfg.cls}`}
               >
-                {isFree ? "Free" : `৳${course.price}`}
+                {statusCfg.label}
               </span>
-            </div>
+            )}
+
+            {/* price over thumbnail */}
+            {!currentEnrollment && (
+              <div className="absolute bottom-4 left-4">
+                <span
+                  className={`text-2xl font-black font-mono
+                ${isFree ? "text-teal" : "text-amber"}`}
+                >
+                  {isFree ? "Free" : `৳${course?.price}`}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* ── Title + meta ── */}
@@ -146,6 +184,10 @@ function CourseDetails() {
           <Section title="This course includes">
             <div className="grid grid-cols-2 gap-3">
               <InfoChip
+                icon="👥"
+                label={`${studentCount} students enrolled `}
+              />
+              <InfoChip
                 icon="🎥"
                 label={`${course.lesson_count ?? 0} lessons`}
               />
@@ -179,6 +221,117 @@ function CourseDetails() {
               </p>
             </div>
           </Section>
+
+          {/* ── Enrolled Students — teacher & admin only ── */}
+          {(isTeacher || isAdmin) && (
+            <Section title={`Enrolled Students (${courseEnrollments.length})`}>
+              {courseEnrollments.length === 0 ? (
+                <div
+                  className="flex flex-col items-center justify-center py-8 gap-2
+                                rounded-xl border border-dashed border-border-2 bg-glass"
+                >
+                  <span className="text-2xl">👥</span>
+                  <p className="text-sm text-slate">No students enrolled yet</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border">
+                        {[
+                          "#",
+                          "Student",
+                          "Email",
+                          "Enrolled",
+                          "Progress",
+                          "Status",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className="text-left py-2.5 px-3 text-[10px] font-semibold
+                                         font-mono text-slate-dark uppercase tracking-wider"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {courseEnrollments.map((enroll, idx) => (
+                        <tr
+                          key={enroll.id}
+                          className="border-b border-border/50 hover:bg-glass transition-colors"
+                        >
+                          {/* # */}
+                          <td className="py-3 px-3 font-mono text-slate-dark">
+                            {String(idx + 1).padStart(2, "0")}
+                          </td>
+                          {/* Name */}
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-7 h-7 rounded-full bg-linear-to-br from-violet to-teal
+                                              flex items-center justify-center text-[10px] font-bold
+                                              text-white shrink-0"
+                              >
+                                {(enroll.users?.full_name ??
+                                  "?")[0].toUpperCase()}
+                              </div>
+                              <span className="text-white font-medium truncate max-w-30">
+                                {enroll.users?.full_name ?? "Unknown"}
+                              </span>
+                            </div>
+                          </td>
+                          {/* Email */}
+                          <td className="py-3 px-3 text-slate truncate max-w-35">
+                            {enroll.users?.email ?? "—"}
+                          </td>
+                          {/* Enrolled date */}
+                          <td className="py-3 px-3 text-slate font-mono whitespace-nowrap">
+                            {new Date(enroll.enrolled_at).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )}
+                          </td>
+                          {/* Progress bar */}
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2 min-w-20">
+                              <div className="prog flex-1">
+                                <div
+                                  className="prog-fill bg-teal"
+                                  style={{ width: `${enroll.progress ?? 0}%` }}
+                                />
+                              </div>
+                              <span className="text-[10px] font-mono text-teal w-7 text-right">
+                                {enroll.progress ?? 0}%
+                              </span>
+                            </div>
+                          </td>
+                          {/* Status chip */}
+                          <td className="py-3 px-3">
+                            <span
+                              className={`tag font-mono border
+                              ${
+                                enroll.status === "active"
+                                  ? "bg-teal-dim text-teal border-teal/25"
+                                  : "bg-glass-2 text-slate border-border"
+                              }`}
+                            >
+                              {enroll.status ?? "—"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Section>
+          )}
         </div>
 
         {/* ══════════════════════════════════
@@ -189,33 +342,53 @@ function CourseDetails() {
           <div className="glass rounded-2xl border border-border p-6 lg:sticky lg:top-24">
             {/* Price */}
             <div className="mb-5">
-              <span
-                className={`text-3xl font-black font-mono
+              {!currentEnrollment ? (
+                <div>
+                  <span
+                    className={`text-3xl font-black font-mono
                 ${isFree ? "text-teal" : "text-amber"}`}
-              >
-                {isFree ? "Free" : `৳${course.price}`}
-              </span>
-              {!isFree && (
-                <p className="text-xs text-slate-dark mt-0.5">
-                  One-time payment · Lifetime access
+                  >
+                    {isFree ? "Free" : `৳${course?.price}`}
+                  </span>
+                  {!isFree && (
+                    <p className="text-xs text-slate-dark mt-0.5">
+                      One-time payment · Lifetime access
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-teal mt-0.5 text-center font-bold">
+                  ✓ You're already enrolled in this course.
                 </p>
               )}
             </div>
 
             {/* CTA */}
             {isTeacher ? (
-              /* Teacher sees edit button instead of enroll */
+              // Teacher
               <button
                 onClick={() => navigate(`/dashboard/edit-course/${course.id}`)}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white
-                           bg-amber hover:bg-amber/90 transition-all
-                           shadow-[0_4px_16px_rgba(245,166,35,.3)] mb-3 cursor-pointer"
+               bg-amber hover:bg-amber/90 transition-all
+               shadow-[0_4px_16px_rgba(245,166,35,.3)] mb-3"
               >
                 Edit Course
               </button>
-            ) : (
-              <button className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3 cursor-pointer">
+            ) : !currentEnrollment ? (
+              // Student not enrolled
+              <button
+                onClick={() => navigate(`/courses/${courseId}/checkout`)}
+                className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3"
+              >
                 {isFree ? "Enroll for Free" : "Enroll Now"}
+              </button>
+            ) : (
+              // Student already enrolled
+              <button
+                onClick={() => navigate(`/dashboard/my-learning`)}
+                className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3"
+              >
+                Start Learning
               </button>
             )}
 
@@ -223,7 +396,7 @@ function CourseDetails() {
               onClick={() => navigate(-1)}
               className="w-full py-2.5 rounded-xl text-sm font-semibold
                          text-slate border border-border
-                         hover:text-white hover:bg-glass-2 transition-all cursor-pointer"
+                         hover:text-white hover:bg-glass-2 transition-all"
             >
               Go Back
             </button>
@@ -237,6 +410,11 @@ function CourseDetails() {
                   value: course.category ?? "—",
                 },
                 { icon: "📶", label: "Level", value: course.level ?? "—" },
+                {
+                  icon: "👥",
+                  label: "Enrolled",
+                  value: `${studentCount} students`,
+                },
                 {
                   icon: "🎥",
                   label: "Lessons",
@@ -264,7 +442,7 @@ function CourseDetails() {
           </div>
 
           {/* ── Instructor card ── */}
-          <div className="glass rounded-2xl border border-border p-5 lg:sticky lg:top-120">
+          <div className="glass rounded-2xl border border-border sticky top-127 p-5">
             <p className="text-[10px] font-mono text-slate-dark uppercase tracking-widest mb-3">
               Instructor
             </p>

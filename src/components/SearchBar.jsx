@@ -1,4 +1,4 @@
-import { Input } from "../index";
+import { Input } from "./index";
 
 /**
  * SearchBar
@@ -20,6 +20,8 @@ function SearchBar({
   placeholder = "Search…",
   className = "",
   inputClass = "",
+  value,
+  onChange,
 }) {
   return (
     <div className={`relative ${className}`}>
@@ -39,7 +41,9 @@ function SearchBar({
       </svg>
 
       <Input
-        type="search"
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={`pl-9 pr-4 py-2 rounded-lg text-sm
                    bg-white/5 border border-white/8 text-white placeholder:text-slate-dark
@@ -47,6 +51,18 @@ function SearchBar({
                    focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20
                    ${inputClass}`}
       />
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2
+                     w-5 h-5 flex items-center justify-center
+                     rounded-full text-slate hover:text-violet-500
+                      transition"
+        >
+          ✕
+        </button>
+      )}
     </div>
   );
 }

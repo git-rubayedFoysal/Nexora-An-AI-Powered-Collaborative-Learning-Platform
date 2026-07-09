@@ -8,6 +8,8 @@ import DashboardLayout from "./DashboardLayout";
 import EditCourse from "./Course/EditCourse";
 import PublicCourses from "./Course/PublicCourses";
 import CourseDetails from "./Course/CourseDetails";
+import Checkout from "./Course/Checkout";
+import EnrollmentSuccess from "./Course/EnrollmentSuccess";
 
 export {
   Home,
@@ -20,4 +22,6 @@ export {
   EditCourse,
   PublicCourses,
   CourseDetails,
+  Checkout,
+  EnrollmentSuccess,
 };

@@ -23,10 +23,12 @@ import CourseForm from "./Course/CourseForm";
 import ProtectedRoute from "./AuthLayout";
 import RoleRoute from "./ServiceLayout";
 import MyCourses from "./Dashboard/Teacher/MyCourses";
+import MyLearning from "./Dashboard/Student/MyLearning";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import ManageCourses from "./Dashboard/Admin/ManageCourses";
 import EmptyState from "./EmptyState";
 import LoadingState from "./LoadingState";
+import SearchBar from "./SearchBar";
 
 export {
   Input,
@@ -54,8 +56,10 @@ export {
   ProtectedRoute,
   RoleRoute,
   MyCourses,
+  MyLearning,
   DeleteConfirmModal,
   ManageCourses,
   EmptyState,
   LoadingState,
+  SearchBar,
 };
