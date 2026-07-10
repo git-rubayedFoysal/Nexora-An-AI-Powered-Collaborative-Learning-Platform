@@ -67,12 +67,12 @@ function CourseDetails() {
     {
       published: {
         label: "Published",
-        cls: "bg-teal/15 text-teal border-teal/25",
+        cls: "bg-teal text-white border-teal/25",
       },
-      draft: { label: "Draft", cls: "bg-amber/15 text-amber border-amber/25" },
+      draft: { label: "Draft", cls: "bg-amber text-white border-amber/25" },
       archived: {
         label: "Archived",
-        cls: "bg-glass-2 text-slate border-border",
+        cls: "bg-coral text-white border-border",
       },
     }[course.status?.toLowerCase()] ?? null;
 
@@ -125,11 +125,16 @@ function CourseDetails() {
 
             {/* status chip */}
             {statusCfg && !isStudent && (
-              <span
-                className={`absolute top-4 right-4 tag border font-mono ${statusCfg.cls}`}
-              >
-                {statusCfg.label}
-              </span>
+              <>
+                <span
+                  className={`absolute flex items-center gap-1 top-4 right-4 font-bold tag border font-mono ${statusCfg.cls}`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 animate-pulse rounded-full shrink-0 bg-white`}
+                  />
+                  {statusCfg.label}
+                </span>
+              </>
             )}
 
             {/* price over thumbnail */}
@@ -341,7 +346,7 @@ function CourseDetails() {
           {/* ── Enroll card ── */}
           <div className="glass rounded-2xl border border-border p-6 lg:sticky lg:top-24">
             {/* Price */}
-            <div className="mb-5">
+            <div className="mb-5 text-center">
               {!currentEnrollment ? (
                 <div>
                   <span
@@ -357,14 +362,14 @@ function CourseDetails() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-teal mt-0.5 text-center font-bold">
-                  ✓ You're already enrolled in this course.
+                <p className="tag bg-teal-dim border border-teal/25 text-teal mt-0.5 text-center font-bold">
+                  ✔ You're already enrolled in this course.
                 </p>
               )}
             </div>
 
             {/* CTA */}
-            {isTeacher ? (
+            {isTeacher || isAdmin ? (
               // Teacher
               <button
                 onClick={() => navigate(`/dashboard/edit-course/${course.id}`)}

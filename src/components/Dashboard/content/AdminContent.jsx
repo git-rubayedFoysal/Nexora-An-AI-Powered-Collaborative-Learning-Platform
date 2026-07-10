@@ -29,7 +29,7 @@ function AdminContent({ role }) {
         >
           Platform Overview <span className="gradient-text">⚙️</span>
         </h1>
-        <span className="animate-pulse-coral inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/25 font-mono">
+        <span className="animate-pulse-coral inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/25 font-mono">
           ● {role.toUpperCase()}
         </span>
       </div>

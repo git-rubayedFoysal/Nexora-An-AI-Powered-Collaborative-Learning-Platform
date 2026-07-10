@@ -15,6 +15,8 @@ function EditCourse() {
   const { loading, selectedCourse } = useSelector((state) => state.course);
   const { userData } = useSelector((state) => state.auth);
 
+  const isTeacher = userData?.role?.toLowerCase() === "teacher";
+
   const handleEditCourse = async ({ courseData, thumbnailFile }) => {
     /*
      * FIX 2: wrapped in try/catch.
@@ -32,7 +34,9 @@ function EditCourse() {
           oldThumbnailPath: selectedCourse.thumbnail_url,
         }),
       ).unwrap();
-      navigate("/dashboard/my-courses");
+      isTeacher
+        ? navigate("/dashboard/my-courses")
+        : navigate("/dashboard/manage-courses");
     } catch (err) {
       // err.message comes from rejectWithValue(error.message) in the slice
       setSubmitError(err?.message ?? "Something went wrong. Please try again.");
@@ -43,8 +47,6 @@ function EditCourse() {
     if (!courseId) return;
     dispatch(fetchCourse(courseId));
   }, [dispatch, courseId]);
-
-  const isTeacher = userData?.role?.toLowerCase() === "teacher";
 
   /* ── Loading state ──
        CHANGED: removed min-h-screen — centering is relative to the outlet area,

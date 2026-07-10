@@ -1,1 +1,1 @@
-export const COURSE_PAGE_SIZE = 3;
+export const COURSE_PAGE_SIZE = 6;

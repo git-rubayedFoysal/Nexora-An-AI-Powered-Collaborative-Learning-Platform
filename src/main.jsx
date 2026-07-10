@@ -73,13 +73,23 @@ const route = createBrowserRouter([
           },
           {
             path: ":courseId/checkout",
-            element: <Checkout />,
+            element: (
+              <ProtectedRoute requireAuth>
+                <Checkout />
+              </ProtectedRoute>
+            ),
           },
         ],
       },
       {
         path: "enrollment-success",
-        element: <EnrollmentSuccess />,
+        element: (
+          <ProtectedRoute requireAuth>
+            <RoleRoute allowedRoles={["student"]}>
+              <EnrollmentSuccess />,
+            </RoleRoute>
+          </ProtectedRoute>
+        ),
       },
     ],
   },
