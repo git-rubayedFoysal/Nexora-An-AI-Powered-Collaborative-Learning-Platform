@@ -5,6 +5,7 @@ import { logout as storeLogout } from "../../features/auth/authSlice";
 import AvatarDropdown from "./AvatarDropdown";
 import { Button } from "../index";
 import authService from "../../services/supabase/auth/auth.service";
+import { useLocation } from "react-router";
 
 /**
  * AuthActions
@@ -21,7 +22,13 @@ import authService from "../../services/supabase/auth/auth.service";
  *  - displayName : string  — user's full name
  *  - displayEmail: string  — user's email address
  */
-function AuthActions({ initials, displayName, displayEmail }) {
+function AuthActions({
+  initials,
+  displayName,
+  displayEmail,
+  mobileOpen,
+  onMenuToggle,
+}) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -37,6 +44,8 @@ function AuthActions({ initials, displayName, displayEmail }) {
 
     navigate("/login");
   }
+
+  const location = useLocation();
 
   return (
     <div className="flex items-center gap-2 ml-auto">
@@ -74,6 +83,49 @@ function AuthActions({ initials, displayName, displayEmail }) {
         onClose={() => setAvatarOpen(false)}
         onLogout={handleLogout}
       />
+
+      {/* ── Hamburger / close toggle (mobile only, lg:hidden) ── */}
+      {location.pathname === "/" && (
+        <Button
+          type="button"
+          onClick={onMenuToggle}
+          className="lg:hidden p-2 rounded-lg text-slate hover:text-white
+                   hover:bg-white/6 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? (
+            /* ✕ close icon */
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          ) : (
+            /* ☰ hamburger icon */
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          )}
+        </Button>
+      )}
     </div>
   );
 }

@@ -25,10 +25,7 @@ function TeacherContent({ role, user }) {
   return (
     <>
       <div className="mb-7">
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{ fontFamily: "'Outfit',sans-serif" }}
-        >
+        <h1 className="text-2xl font-bold mb-2 font-display">
           Good {greeting}, <span className="gradient-text">{user}</span> 📋
         </h1>
         <span className="animate-pulse-amber inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber/10 text-amber border border-amber/25 font-mono">

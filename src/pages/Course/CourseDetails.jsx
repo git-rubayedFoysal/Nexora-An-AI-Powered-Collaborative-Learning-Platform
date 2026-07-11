@@ -9,7 +9,6 @@ import {
 import courseStorage from "../../services/supabase/course/course.storage";
 import { LoadingState } from "../../components";
 
-/* ── small helpers ── */
 function InfoChip({ icon, label }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-glass-2 border border-border">
@@ -21,7 +20,7 @@ function InfoChip({ icon, label }) {
 
 function Section({ title, children }) {
   return (
-    <div className="glass rounded-2xl border border-border p-6">
+    <div className="glass rounded-2xl border border-border p-5 sm:p-6">
       <h2 className="text-sm font-bold text-white mb-4 font-display">
         {title}
       </h2>
@@ -49,12 +48,10 @@ function CourseDetails() {
   const isStudent = userData?.role?.toLowerCase() === "student";
   const isFree = !course?.price || course?.price === 0;
 
-  // Fetch enrolled students only when the viewer is teacher or admin
   useEffect(() => {
     dispatch(fetchCourseEnrollments(courseId));
   }, [dispatch, courseId]);
 
-  /* ── Loading ── */
   if (loading || !course) {
     return <LoadingState color="--color-violet" content="course..." />;
   }
@@ -70,17 +67,15 @@ function CourseDetails() {
         cls: "bg-teal text-white border-teal/25",
       },
       draft: { label: "Draft", cls: "bg-amber text-white border-amber/25" },
-      archived: {
-        label: "Archived",
-        cls: "bg-coral text-white border-border",
-      },
+      archived: { label: "Archived", cls: "bg-coral text-white border-border" },
     }[course.status?.toLowerCase()] ?? null;
 
   const studentCount = courseEnrollments.length ?? 0;
+
   return (
     <div className="max-w-5xl mx-auto mt-20">
-      {/* ── Breadcrumb ── */}
-      <div className="flex items-center gap-2 text-xs text-slate-dark font-mono mb-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-xs text-slate-dark font-mono mb-6 flex-wrap">
         <button
           onClick={() => navigate("/courses")}
           className="hover:text-slate transition-colors"
@@ -99,15 +94,13 @@ function CourseDetails() {
             <span>/</span>
           </>
         )}
-        <span className="text-slate truncate max-w-50">{course.title}</span>
+        <span className="text-slate truncate max-w-40">{course.title}</span>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* ══════════════════════════════════
-            LEFT — main content (2/3)
-        ══════════════════════════════════ */}
+        {/* ── LEFT (2/3) ── */}
         <div className="lg:col-span-2 space-y-5">
-          {/* ── Hero thumbnail ── */}
+          {/* Hero thumbnail */}
           <div className="relative rounded-2xl overflow-hidden border border-border">
             <img
               src={thumbnail}
@@ -115,34 +108,28 @@ function CourseDetails() {
               onError={(e) => {
                 e.currentTarget.src = "/placeholder-course.png";
               }}
-              className="w-full h-56 sm:h-72 object-cover brightness-90"
+              className="w-full h-48 sm:h-72 object-cover brightness-90"
             />
-            {/* scrim */}
             <div
               className="absolute inset-x-0 bottom-0 h-24
                             bg-linear-to-t from-navy-2 to-transparent"
             />
 
-            {/* status chip */}
             {statusCfg && !isStudent && (
-              <>
-                <span
-                  className={`absolute flex items-center gap-1 top-4 right-4 font-bold tag border font-mono ${statusCfg.cls}`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 animate-pulse rounded-full shrink-0 bg-white`}
-                  />
-                  {statusCfg.label}
-                </span>
-              </>
+              <span
+                className={`absolute flex items-center gap-1 top-3 right-3
+                                font-bold tag border font-mono ${statusCfg.cls}`}
+              >
+                <span className="w-1.5 h-1.5 animate-pulse rounded-full shrink-0 bg-white" />
+                {statusCfg.label}
+              </span>
             )}
 
-            {/* price over thumbnail */}
             {!currentEnrollment && (
-              <div className="absolute bottom-4 left-4">
+              <div className="absolute bottom-3 left-4">
                 <span
                   className={`text-2xl font-black font-mono
-                ${isFree ? "text-teal" : "text-amber"}`}
+                  ${isFree ? "text-teal" : "text-amber"}`}
                 >
                   {isFree ? "Free" : `৳${course?.price}`}
                 </span>
@@ -150,13 +137,11 @@ function CourseDetails() {
             )}
           </div>
 
-          {/* ── Title + meta ── */}
+          {/* Title + meta */}
           <div>
-            <h1 className="text-2xl font-bold text-white leading-snug mb-3 font-display">
+            <h1 className="text-xl sm:text-2xl font-bold text-white leading-snug mb-3 font-display">
               {course.title}
             </h1>
-
-            {/* chips row */}
             <div className="flex flex-wrap gap-2">
               {course.category && (
                 <span className="tag bg-teal-dim text-teal border border-teal/25 font-mono">
@@ -178,20 +163,18 @@ function CourseDetails() {
             </div>
           </div>
 
-          {/* ── Description ── */}
+          {/* Description */}
           <Section title="About this course">
             <p className="text-sm text-slate leading-relaxed">
               {course.description ?? "No description available."}
             </p>
           </Section>
 
-          {/* ── Course includes ── */}
+          {/* Course includes */}
           <Section title="This course includes">
-            <div className="grid grid-cols-2 gap-3">
-              <InfoChip
-                icon="👥"
-                label={`${studentCount} students enrolled `}
-              />
+            {/* FIX: grid-cols-1 on mobile, 2 on sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InfoChip icon="👥" label={`${studentCount} students enrolled`} />
               <InfoChip
                 icon="🎥"
                 label={`${course.lesson_count ?? 0} lessons`}
@@ -209,8 +192,7 @@ function CourseDetails() {
             </div>
           </Section>
 
-          {/* ── Curriculum placeholder ──
-              TODO: populate when lessons are implemented */}
+          {/* Curriculum placeholder */}
           <Section title="Course Curriculum">
             <div
               className="flex flex-col items-center justify-center py-10 gap-3
@@ -227,7 +209,7 @@ function CourseDetails() {
             </div>
           </Section>
 
-          {/* ── Enrolled Students — teacher & admin only ── */}
+          {/* Enrolled Students — teacher & admin only */}
           {(isTeacher || isAdmin) && (
             <Section title={`Enrolled Students (${courseEnrollments.length})`}>
               {courseEnrollments.length === 0 ? (
@@ -239,8 +221,9 @@ function CourseDetails() {
                   <p className="text-sm text-slate">No students enrolled yet</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
+                /* FIX: overflow-x-auto so table scrolls on mobile instead of breaking layout */
+                <div className="overflow-x-auto -mx-1">
+                  <table className="w-full text-xs min-w-120">
                     <thead>
                       <tr className="border-b border-border">
                         {[
@@ -254,7 +237,7 @@ function CourseDetails() {
                           <th
                             key={h}
                             className="text-left py-2.5 px-3 text-[10px] font-semibold
-                                         font-mono text-slate-dark uppercase tracking-wider"
+                                         font-mono text-slate-dark uppercase tracking-wider whitespace-nowrap"
                           >
                             {h}
                           </th>
@@ -267,11 +250,9 @@ function CourseDetails() {
                           key={enroll.id}
                           className="border-b border-border/50 hover:bg-glass transition-colors"
                         >
-                          {/* # */}
                           <td className="py-3 px-3 font-mono text-slate-dark">
                             {String(idx + 1).padStart(2, "0")}
                           </td>
-                          {/* Name */}
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2">
                               <div
@@ -282,16 +263,14 @@ function CourseDetails() {
                                 {(enroll.users?.full_name ??
                                   "?")[0].toUpperCase()}
                               </div>
-                              <span className="text-white font-medium truncate max-w-30">
+                              <span className="text-white font-medium truncate max-w-25">
                                 {enroll.users?.full_name ?? "Unknown"}
                               </span>
                             </div>
                           </td>
-                          {/* Email */}
-                          <td className="py-3 px-3 text-slate truncate max-w-35">
+                          <td className="py-3 px-3 text-slate truncate max-w-30">
                             {enroll.users?.email ?? "—"}
                           </td>
-                          {/* Enrolled date */}
                           <td className="py-3 px-3 text-slate font-mono whitespace-nowrap">
                             {new Date(enroll.enrolled_at).toLocaleDateString(
                               "en-GB",
@@ -302,7 +281,6 @@ function CourseDetails() {
                               },
                             )}
                           </td>
-                          {/* Progress bar */}
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2 min-w-20">
                               <div className="prog flex-1">
@@ -316,7 +294,6 @@ function CourseDetails() {
                               </span>
                             </div>
                           </td>
-                          {/* Status chip */}
                           <td className="py-3 px-3">
                             <span
                               className={`tag font-mono border
@@ -339,19 +316,17 @@ function CourseDetails() {
           )}
         </div>
 
-        {/* ══════════════════════════════════
-            RIGHT — sticky sidebar (1/3)
-        ══════════════════════════════════ */}
-        <div className="space-y-4">
-          {/* ── Enroll card ── */}
-          <div className="glass rounded-2xl border border-border p-6 lg:sticky lg:top-24">
+        {/* ── RIGHT sidebar (1/3) ── */}
+        {/* FIX: sidebar stacks below content on mobile, sticky only on lg */}
+        <div className="space-y-4 lg:self-start">
+          <div className="glass rounded-2xl border border-border p-5 sm:p-6 lg:sticky lg:top-6">
             {/* Price */}
             <div className="mb-5 text-center">
               {!currentEnrollment ? (
                 <div>
                   <span
                     className={`text-3xl font-black font-mono
-                ${isFree ? "text-teal" : "text-amber"}`}
+                    ${isFree ? "text-teal" : "text-amber"}`}
                   >
                     {isFree ? "Free" : `৳${course?.price}`}
                   </span>
@@ -362,7 +337,7 @@ function CourseDetails() {
                   )}
                 </div>
               ) : (
-                <p className="tag bg-teal-dim border border-teal/25 text-teal mt-0.5 text-center font-bold">
+                <p className="tag bg-teal-dim border border-teal/25 text-teal font-bold">
                   ✔ You're already enrolled in this course.
                 </p>
               )}
@@ -370,17 +345,15 @@ function CourseDetails() {
 
             {/* CTA */}
             {isTeacher || isAdmin ? (
-              // Teacher
               <button
                 onClick={() => navigate(`/dashboard/edit-course/${course.id}`)}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white
-               bg-amber hover:bg-amber/90 transition-all
-               shadow-[0_4px_16px_rgba(245,166,35,.3)] mb-3"
+                           bg-amber hover:bg-amber/90 transition-all
+                           shadow-[0_4px_16px_rgba(245,166,35,.3)] mb-3"
               >
                 Edit Course
               </button>
             ) : !currentEnrollment ? (
-              // Student not enrolled
               <button
                 onClick={() => navigate(`/courses/${courseId}/checkout`)}
                 className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3"
@@ -388,7 +361,6 @@ function CourseDetails() {
                 {isFree ? "Enroll for Free" : "Enroll Now"}
               </button>
             ) : (
-              // Student already enrolled
               <button
                 onClick={() => navigate(`/dashboard/my-learning`)}
                 className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3"
@@ -433,12 +405,12 @@ function CourseDetails() {
               ].map((row) => (
                 <div
                   key={row.label}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between gap-2"
                 >
-                  <span className="text-xs text-slate flex items-center gap-1.5">
+                  <span className="text-xs text-slate flex items-center gap-1.5 shrink-0">
                     <span>{row.icon}</span> {row.label}
                   </span>
-                  <span className="text-xs font-semibold text-white font-mono">
+                  <span className="text-xs font-semibold text-white font-mono text-right truncate">
                     {row.value}
                   </span>
                 </div>
@@ -446,8 +418,9 @@ function CourseDetails() {
             </div>
           </div>
 
-          {/* ── Instructor card ── */}
-          <div className="glass rounded-2xl border border-border sticky top-127 p-5">
+          {/* Instructor card */}
+          {/* FIX: removed sticky top-127 (arbitrary, broken) */}
+          <div className="glass rounded-2xl border border-border p-5">
             <p className="text-[10px] font-mono text-slate-dark uppercase tracking-widest mb-3">
               Instructor
             </p>
@@ -458,11 +431,11 @@ function CourseDetails() {
               >
                 {(course.users?.full_name ?? "I")[0].toUpperCase()}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-white">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">
                   {course.users?.full_name ?? "Instructor"}
                 </p>
-                <p className="text-xs text-slate-dark">
+                <p className="text-xs text-slate-dark truncate">
                   {course.users?.email ?? ""}
                 </p>
               </div>

@@ -17,10 +17,7 @@ function StudentContent({ role, user }) {
     <>
       {/* Greeting */}
       <div className="mb-7">
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{ fontFamily: "'Outfit',sans-serif" }}
-        >
+        <h1 className="text-2xl font-bold mb-2 font-display">
           Good {greeting}, <span className="gradient-text">{user}</span> 👋
         </h1>
 

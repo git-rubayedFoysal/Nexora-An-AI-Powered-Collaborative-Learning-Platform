@@ -23,10 +23,7 @@ function AdminContent({ role }) {
   return (
     <>
       <div className="mb-7">
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{ fontFamily: "'Outfit',sans-serif" }}
-        >
+        <h1 className="text-2xl font-bold mb-2 font-display">
           Platform Overview <span className="gradient-text">⚙️</span>
         </h1>
         <span className="animate-pulse-coral inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/25 font-mono">
@@ -220,7 +217,7 @@ function AdminContent({ role }) {
               Top Courses by Enrollment
             </h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs min-w-90">
                 <thead>
                   <tr>
                     {["Course", "Teacher", "Enrolled", "Status"].map((h) => (
@@ -383,7 +380,7 @@ function AdminContent({ role }) {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-xs min-w-120">
             <thead>
               <tr>
                 {["Name", "Email", "Role", "Courses", "Joined", "Action"].map(

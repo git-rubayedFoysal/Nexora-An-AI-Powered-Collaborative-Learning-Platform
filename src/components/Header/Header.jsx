@@ -103,6 +103,8 @@ function Header() {
                 initials={initials}
                 displayName={displayName}
                 displayEmail={displayEmail}
+                mobileOpen={mobileOpen}
+                onMenuToggle={onMenuToggle}
               />
             )}
 
