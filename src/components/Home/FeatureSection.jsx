@@ -65,21 +65,21 @@ function FeatureSection() {
         </div>
 
         {/* <!-- Feature cards --> */}
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* <!-- AI Tutor --> */}
           {featuresData.map((item) => (
             <>
-              <div class="feature-card glass rounded-2xl p-6 border border-white/6 cursor-default">
-                <div class="w-12 h-12 rounded-xl bg-violet/20 flex items-center justify-center text-2xl mb-5 border border-violet/20">
+              <div className="feature-card glass rounded-2xl p-6 border border-white/6 cursor-default">
+                <div className="w-12 h-12 rounded-xl bg-violet/20 flex items-center justify-center text-2xl mb-5 border border-violet/20">
                   {item.icon}
                 </div>
-                <h3 class="text-lg font-bold text-white mb-2 font-[Outfit]">
+                <h3 className="text-lg font-bold text-white mb-2 font-[Outfit]">
                   {item.title}
                 </h3>
-                <p class="text-sm text-slate leading-relaxed mb-4">
+                <p className="text-sm text-slate leading-relaxed mb-4">
                   {item.description}
                 </p>
-                <span class="tag bg-violet/15 text-violet-light border border-violet/20">
+                <span className="tag bg-violet/15 text-violet-light border border-violet/20">
                   {item.tech}
                 </span>
               </div>

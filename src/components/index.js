@@ -16,6 +16,19 @@ import Testimonials from "./Home/Testimonials";
 import Sidebar from "./Dashboard/Sidebar";
 import DashboardHome from "./Dashboard/DashboardHome";
 import DashboardHeader from "./Dashboard/DashboardHeader";
+import Textarea from "./Textarea";
+import Select from "./Select";
+import CourseCard from "./Course/CourseCard";
+import CourseForm from "./Course/CourseForm";
+import ProtectedRoute from "./AuthLayout";
+import RoleRoute from "./ServiceLayout";
+import MyCourses from "./Dashboard/Teacher/MyCourses";
+import MyLearning from "./Dashboard/Student/MyLearning";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import ManageCourses from "./Dashboard/Admin/ManageCourses";
+import EmptyState from "./EmptyState";
+import LoadingState from "./LoadingState";
+import SearchBar from "./SearchBar";
 
 export {
   Input,
@@ -36,4 +49,17 @@ export {
   Sidebar,
   DashboardHome,
   DashboardHeader,
+  Textarea,
+  Select,
+  CourseCard,
+  CourseForm,
+  ProtectedRoute,
+  RoleRoute,
+  MyCourses,
+  MyLearning,
+  DeleteConfirmModal,
+  ManageCourses,
+  EmptyState,
+  LoadingState,
+  SearchBar,
 };

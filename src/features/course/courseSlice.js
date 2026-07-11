@@ -1,0 +1,341 @@
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import courseService from "../../services/supabase/course/course.service";
+import courseStorage from "../../services/supabase/course/course.storage";
+import authService from "../../services/supabase/auth/auth.service";
+
+// Generate unique thumbnail storage path
+async function generateThumbnailPath(thumbnailFile) {
+  if (!thumbnailFile) {
+    throw new Error("Thumbnail file is required.");
+  }
+
+  // Get authenticated user
+  const user = await authService.getUser();
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  // Extract extension
+  const extension = thumbnailFile.name.split(".").pop()?.toLowerCase();
+
+  // Sanitize filename (remove spaces & special characters)
+  const fileName = thumbnailFile.name
+    .replace(/\.[^/.]+$/, "") // remove extension
+    .replace(/[^a-zA-Z0-9-_]/g, "-") // replace invalid chars
+    .toLowerCase();
+
+  // Generate unique path
+  return `${user.id}/${Date.now()}-${fileName}.${extension}`;
+}
+
+// Initial state for the course slice
+const initialState = {
+  featureCourses: [], // List of featured courses for the homepage
+  courses: [], // List of published courses
+  teacherCourses: [], // List of courses created by the teacher
+  selectedCourse: null, // Currently selected course for viewing or editing
+  loading: false, // Loading state for async actions
+  error: null, // Error message for async actions
+  allCourses: [], // List of all courses for admin
+  // Course statistics
+  totalCourses: 0,
+  publishedCourses: 0,
+  draftCourses: 0,
+  archivedCourses: 0,
+};
+
+// Thunk for creating a course with optional thumbnail upload
+export const createCourse = createAsyncThunk(
+  "course/createCourse",
+  async ({ courseData, thumbnailFile }) => {
+    let path = null;
+    // upload thumbnail into bucket
+    if (thumbnailFile) {
+      const filePath = await generateThumbnailPath(thumbnailFile);
+      path = await courseStorage.uploadThumbnail(thumbnailFile, filePath);
+    }
+    return await courseService.createCourse({
+      ...courseData,
+      thumbnail_url: path,
+    });
+  },
+);
+
+// Thunk for updating a course with optional thumbnail upload
+export const updateCourse = createAsyncThunk(
+  "course/updateCourse",
+  async ({ courseId, courseData, thumbnailFile, oldThumbnailPath }) => {
+    let path = oldThumbnailPath;
+    if (thumbnailFile) {
+      const filePath = await generateThumbnailPath(thumbnailFile);
+      // upload new thumbnail
+      path = await courseStorage.uploadThumbnail(thumbnailFile, filePath);
+      // delete old thumbnail
+      if (oldThumbnailPath) {
+        await courseStorage.deleteThumbnail(oldThumbnailPath);
+      }
+    }
+    // update course
+    return await courseService.updateCourse(courseId, {
+      ...courseData,
+      thumbnail_url: path,
+    });
+  },
+);
+
+// Thunk for deleting a course with thumbnail cleanup
+export const deleteCourse = createAsyncThunk(
+  "course/deleteCourse",
+  async ({ courseId, filePath }) => {
+    // delete thumbnail
+    if (filePath) {
+      await courseStorage.deleteThumbnail(filePath);
+    }
+    await courseService.deleteCourse(courseId);
+    return courseId;
+  },
+);
+
+// Thunk for fetching a course by its ID
+export const fetchCourse = createAsyncThunk(
+  "course/fetchCourse",
+  async (courseId) => {
+    return await courseService.getCourseById(courseId);
+  },
+);
+
+// Thunk for fetching published courses from supabase
+export const fetchPublishedCourses = createAsyncThunk(
+  "course/fetchPublishedCourses",
+  async ({ page = 1, search = "" }) => {
+    return await courseService.getPublishedCourses({ page, search });
+  },
+);
+
+// Thunk for fetching teacher courses from supabase
+export const fetchTeacherCourses = createAsyncThunk(
+  "course/fetchTeacherCourses",
+  async ({ page = 1, search = "" }) => {
+    return await courseService.getTeacherCourses({ page, search });
+  },
+);
+
+// Thunk for fetching all courses from supabase(admin)
+export const fetchAllCourses = createAsyncThunk(
+  "course/fetchAllCourses",
+  async ({ page = 1, search = "" }) => {
+    return await courseService.getAllCourses({ page, search });
+  },
+);
+
+// Thunk for fetching course statistics from supabase
+export const fetchCourseStats = createAsyncThunk(
+  "course/fetchCourseStats",
+  async () => {
+    return await courseService.getCourseStats();
+  },
+);
+
+// Thunk for fetching featured courses from supabase(home page)
+export const fetchFeatureCourses = createAsyncThunk(
+  "course/fetchFeatureCourses",
+  async () => {
+    return await courseService.getFeaturedCourses();
+  },
+);
+
+// Create the course slice with reducers for handling async actions
+const courseSlice = createSlice({
+  name: "course",
+  initialState,
+  // Extra reducers for handling async actions
+  extraReducers: (builder) => {
+    // create course
+    builder
+      .addCase(createCourse.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createCourse.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.status === "published") {
+          state.courses.push(action.payload);
+        }
+        state.teacherCourses.push(action.payload);
+      })
+      .addCase(createCourse.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    // update course
+    builder
+      .addCase(updateCourse.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCourse.fulfilled, (state, action) => {
+        state.loading = false;
+        state.courses = state.courses.filter(
+          (course) => course.id !== action.payload.id,
+        );
+        if (action.payload.status === "published") {
+          state.courses.push(action.payload);
+        }
+        state.teacherCourses = state.teacherCourses.filter(
+          (course) => course.id !== action.payload.id,
+        );
+        state.teacherCourses.push(action.payload);
+        state.selectedCourse = action.payload;
+      })
+      .addCase(updateCourse.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    // delete course
+    builder
+      .addCase(deleteCourse.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteCourse.fulfilled, (state, action) => {
+        state.loading = false;
+
+        state.courses = state.courses.filter(
+          (course) => course.id !== action.payload,
+        );
+
+        state.teacherCourses = state.teacherCourses.filter(
+          (course) => course.id !== action.payload,
+        );
+
+        if (state.selectedCourse?.id === action.payload) {
+          state.selectedCourse = null;
+        }
+      })
+      .addCase(deleteCourse.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    // fetch Published Courses
+    builder
+      .addCase(fetchPublishedCourses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPublishedCourses.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const { courses, total } = action.payload;
+        const { page } = action.meta.arg;
+
+        if (page === 1) {
+          // Initial load or new search
+          state.courses = courses ?? [];
+        } else {
+          // Load More
+          state.courses = [...state.courses, ...(courses ?? [])];
+        }
+
+        state.totalCourses = total;
+      })
+      .addCase(fetchPublishedCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    // fetch course by ID
+    builder
+      .addCase(fetchCourse.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCourse.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedCourse = action.payload;
+      })
+      .addCase(fetchCourse.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    // fetch teacher courses
+    builder
+      .addCase(fetchTeacherCourses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTeacherCourses.fulfilled, (state, action) => {
+        state.loading = false;
+        const { courses, total } = action.payload;
+        const { page } = action.meta.arg;
+
+        if (page === 1) {
+          // Initial load or new search
+          state.teacherCourses = courses ?? [];
+        } else {
+          // Load More
+          state.teacherCourses = [...state.teacherCourses, ...(courses ?? [])];
+        }
+
+        state.totalCourses = total;
+      })
+      .addCase(fetchTeacherCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+    // fetch all courses(admin)
+    builder
+      .addCase(fetchAllCourses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllCourses.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const { courses, total } = action.payload;
+        const { page } = action.meta.arg;
+
+        if (page === 1) {
+          // Initial load or new search
+          state.allCourses = courses ?? [];
+        } else {
+          // Load More
+          state.allCourses = [...state.allCourses, ...(courses ?? [])];
+        }
+
+        state.totalCourses = total;
+      })
+      .addCase(fetchAllCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+    // fetch course statistics
+    builder.addCase(fetchCourseStats.fulfilled, (state, action) => {
+      state.totalCourses = action.payload.totalCourses;
+      state.publishedCourses = action.payload.publishedCourses;
+      state.draftCourses = action.payload.draftCourses;
+      state.archivedCourses = action.payload.archivedCourses;
+    });
+
+    // fetch feature courses
+    builder
+      .addCase(fetchFeatureCourses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchFeatureCourses.fulfilled, (state, action) => {
+        state.loading = false;
+        state.featureCourses = action.payload ?? [];
+      })
+      .addCase(fetchFeatureCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+  },
+});
+
+export default courseSlice.reducer;

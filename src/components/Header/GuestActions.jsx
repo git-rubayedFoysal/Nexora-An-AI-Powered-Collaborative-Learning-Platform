@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import { Button } from "../index";
-import SearchBar from "./SearchBar";
 
 /**
  * GuestActions
@@ -22,13 +21,6 @@ function GuestActions({ mobileOpen, onMenuToggle }) {
 
   return (
     <div className="flex items-center gap-3">
-      {/* ── Compact search bar (desktop / tablet, hidden on mobile) ── */}
-      <SearchBar
-        placeholder="Search…"
-        className="hidden md:flex"
-        inputClass="w-44"
-      />
-
       {/* ── Login ghost button ── */}
       <Button
         type="button"

@@ -1,14 +1,32 @@
+import { fetchCourseStats } from "../../../features/course/courseSlice";
+import { fetchUserStats } from "../../../features/auth/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { LoadingState } from "../../index";
+import { useNavigate } from "react-router";
+
 function AdminContent({ role }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { publishedCourses, loading } = useSelector((state) => state.course);
+  const { totalUsers } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(fetchCourseStats());
+    dispatch(fetchUserStats());
+  }, [dispatch]);
+
+  if (loading) {
+    return <LoadingState color="--color-amber" content="Dashboard..." />;
+  }
+
   return (
     <>
       <div className="mb-7">
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{ fontFamily: "'Outfit',sans-serif" }}
-        >
+        <h1 className="text-2xl font-bold mb-2 font-display">
           Platform Overview <span className="gradient-text">⚙️</span>
         </h1>
-        <span class="animate-pulse-coral inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/25 font-mono">
+        <span className="animate-pulse-coral inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-coral/10 text-coral border border-coral/25 font-mono">
           ● {role.toUpperCase()}
         </span>
       </div>
@@ -18,7 +36,7 @@ function AdminContent({ role }) {
         {[
           {
             icon: "👥",
-            value: "248",
+            value: `${totalUsers}`,
             label: "Total users",
             sub: "↑ 12 this week",
             subColor: "text-emerald-400",
@@ -26,7 +44,7 @@ function AdminContent({ role }) {
           },
           {
             icon: "📚",
-            value: "12",
+            value: `${publishedCourses}`,
             label: "Active courses",
             sub: "↑ 2 published",
             subColor: "text-emerald-400",
@@ -70,14 +88,19 @@ function AdminContent({ role }) {
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
         {[
-          { icon: "➕", label: "Add User" },
-          { icon: "🔑", label: "Assign Role" },
-          { icon: "📚", label: "Manage Courses" },
-          { icon: "📋", label: "Audit Log" },
+          { icon: "➕", label: "Add User", path: "/dashboard" },
+          { icon: "🔑", label: "Assign Role", path: "/dashboard" },
+          {
+            icon: "📚",
+            label: "Manage Courses",
+            path: "/dashboard/manage-courses",
+          },
+          { icon: "📋", label: "Audit Log", path: "/dashboard" },
         ].map((a) => (
           <button
             key={a.label}
-            className="feature-card glass rounded-2xl p-4 text-center border border-white/6"
+            onClick={() => navigate(a.path)}
+            className="feature-card glass rounded-2xl cursor-pointer p-4 text-center border border-white/6"
           >
             <div className="text-2xl mb-2">{a.icon}</div>
             <div className="text-xs font-semibold text-slate">{a.label}</div>
@@ -194,7 +217,7 @@ function AdminContent({ role }) {
               Top Courses by Enrollment
             </h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs min-w-90">
                 <thead>
                   <tr>
                     {["Course", "Teacher", "Enrolled", "Status"].map((h) => (
@@ -357,7 +380,7 @@ function AdminContent({ role }) {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="w-full text-xs min-w-120">
             <thead>
               <tr>
                 {["Name", "Email", "Role", "Courses", "Joined", "Action"].map(

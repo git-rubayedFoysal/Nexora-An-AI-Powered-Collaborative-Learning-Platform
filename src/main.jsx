@@ -4,13 +4,29 @@ import "./index.css";
 import App from "./App.jsx";
 import { Provider } from "react-redux";
 import { store } from "./store/store.js";
-import { Home, Login, Signup } from "./pages/index.js";
-import DashboardLayout from "./pages/DashboardLayout.jsx";
-import { DashboardHome } from "./components/index.js";
+import {
+  Home,
+  Login,
+  Signup,
+  DashboardLayout,
+  VerifyEmail,
+  ErrorPage,
+  CreateCourse,
+  EditCourse,
+  PublicCourses,
+  CourseDetails,
+  Checkout,
+  EnrollmentSuccess,
+} from "./pages/index.js";
+import {
+  DashboardHome,
+  ProtectedRoute,
+  RoleRoute,
+  MyCourses,
+  MyLearning,
+  ManageCourses,
+} from "./components/index.js";
 import AuthInitializer from "./features/auth/AuthInitializer.js";
-import ProtectedRoute from "./components/AuthLayout.jsx";
-import VerifyEmail from "./pages/VerifyEmail.jsx";
-import ErrorPage from "./pages/ErrorPage.jsx";
 
 // Define the routes for the application using React Router
 const route = createBrowserRouter([
@@ -43,6 +59,38 @@ const route = createBrowserRouter([
         path: "verify-email",
         element: <VerifyEmail />,
       },
+      {
+        path: "courses",
+
+        children: [
+          {
+            index: true,
+            element: <PublicCourses />,
+          },
+          {
+            path: ":courseId",
+            element: <CourseDetails />,
+          },
+          {
+            path: ":courseId/checkout",
+            element: (
+              <ProtectedRoute requireAuth>
+                <Checkout />
+              </ProtectedRoute>
+            ),
+          },
+        ],
+      },
+      {
+        path: "enrollment-success",
+        element: (
+          <ProtectedRoute requireAuth>
+            <RoleRoute allowedRoles={["student"]}>
+              <EnrollmentSuccess />,
+            </RoleRoute>
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 
@@ -51,7 +99,7 @@ const route = createBrowserRouter([
     path: "dashboard",
     element: (
       <ProtectedRoute requireAuth>
-        <DashboardLayout />,
+        <DashboardLayout />
       </ProtectedRoute>
     ),
     errorElement: <ErrorPage />,
@@ -62,10 +110,45 @@ const route = createBrowserRouter([
       },
 
       {
-        path: "courses",
-        // element: <Courses />,
+        path: "my-courses",
+        element: (
+          <RoleRoute allowedRoles={["teacher"]}>
+            <MyCourses />
+          </RoleRoute>
+        ),
       },
-
+      {
+        path: "manage-courses",
+        element: (
+          <RoleRoute allowedRoles={["admin"]}>
+            <ManageCourses />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "my-learning",
+        element: (
+          <RoleRoute allowedRoles={["student"]}>
+            <MyLearning />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "create-course",
+        element: (
+          <RoleRoute allowedRoles={["teacher"]}>
+            <CreateCourse />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "edit-course/:courseId",
+        element: (
+          <RoleRoute allowedRoles={["teacher", "admin"]}>
+            <EditCourse />
+          </RoleRoute>
+        ),
+      },
       {
         path: "assignments",
         // element: <Assignments />,
@@ -79,6 +162,10 @@ const route = createBrowserRouter([
       {
         path: "profile",
         // element: <Profile />,
+      },
+      {
+        path: "manage-courses",
+        // element: <ManageCourses />,
       },
     ],
   },

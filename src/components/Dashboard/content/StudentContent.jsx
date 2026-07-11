@@ -1,19 +1,27 @@
 import { getGreeting } from "../../../utils/greeting";
+import { fetchMyEnrollments } from "../../../features/enroll/enrollSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
 
 function StudentContent({ role, user }) {
   const greeting = getGreeting();
+  const dispatch = useDispatch();
+  const { totalCourses } = useSelector((state) => state.enroll);
+
+  // const enrollCount = myEnrollments.length ?? 0;
+
+  useEffect(() => {
+    dispatch(fetchMyEnrollments({}));
+  }, [dispatch]);
   return (
     <>
       {/* Greeting */}
       <div className="mb-7">
-        <h1
-          className="text-2xl font-bold mb-2"
-          style={{ fontFamily: "'Outfit',sans-serif" }}
-        >
+        <h1 className="text-2xl font-bold mb-2 font-display">
           Good {greeting}, <span className="gradient-text">{user}</span> 👋
         </h1>
 
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal/10 text-teal border animate-pulse-teal border-teal/25 font-mono">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal/10 text-teal border animate-pulse-teal border-teal/25 font-mono">
           ● {role.toUpperCase()}
         </span>
       </div>
@@ -23,7 +31,7 @@ function StudentContent({ role, user }) {
         {[
           {
             icon: "📚",
-            value: "4",
+            value: `${totalCourses}`,
             label: "Enrolled courses",
             sub: "↑ 1 this month",
             subColor: "text-emerald-400",
