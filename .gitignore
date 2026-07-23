@@ -13,6 +13,8 @@ dist-ssr
 *.local
 .env
 .env.*.local
+.mimocode
+AGENTS.md
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -24,3 +26,5 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.mimocode
+AGENTS.md
