@@ -37,17 +37,22 @@ export const createLesson = createAsyncThunk(
     description,
     videoFile,
     videoName,
-    pdfFile,
-    pdfName,
+    pdfFile = null,
+    pdfName = null,
     isPreview,
     duration,
     position,
   }) => {
-    // validate file type
-    if (videoFile && !videoFile.type.startsWith("video/")) {
+    // Video (Required)
+    if (!videoFile) {
+      throw new Error("Lesson video is required.");
+    }
+
+    if (!videoFile.type.startsWith("video/")) {
       throw new Error("Invalid video file.");
     }
 
+    // PDF (Optional)
     if (pdfFile && pdfFile.type !== "application/pdf") {
       throw new Error("Invalid PDF file.");
     }
@@ -113,7 +118,7 @@ export const createLesson = createAsyncThunk(
 
       throw error;
     }
-  },
+  };,
 );
 
 // Thunk for get all lessons of a module
