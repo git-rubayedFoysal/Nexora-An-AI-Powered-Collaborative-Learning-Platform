@@ -118,7 +118,7 @@ export const createLesson = createAsyncThunk(
 
       throw error;
     }
-  };,
+  },
 );
 
 // Thunk for get all lessons of a module
