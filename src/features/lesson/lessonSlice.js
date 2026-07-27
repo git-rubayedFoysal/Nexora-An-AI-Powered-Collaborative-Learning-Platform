@@ -1,5 +1,25 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { supabase } from "../../services/supabase/supabaseClient";
 import lessonService from "../../services/supabase/lesson/lesson.service";
+import lessonStorage from "../../services/supabase/lesson/lesson.storage";
+
+// generate uniqe file path for video
+function generateFilePath(fileName, file, moduleId, courseId) {
+  // extract extention
+  const extension = file.name.split(".").pop()?.toLowerCase();
+
+  // sanitized file name(remove space and invalid charecters)
+  const sanitizedName = (fileName || file.name)
+    .trim()
+    .replace(/[^a-zA-Z0-9-_]/g, "-")
+    .toLowerCase();
+
+  // create unique file name
+  const uniqueName = `${sanitizedName}-${Date.now()}`;
+
+  // return uniqe filepath
+  return `${courseId}/${moduleId}/${uniqueName}.${extension}`;
+}
 
 const initialState = {
   lessons: [],
@@ -15,26 +35,84 @@ export const createLesson = createAsyncThunk(
     moduleId,
     title,
     description,
-    videoPath,
+    videoFile,
     videoName,
-    pdfPath,
+    pdfFile,
     pdfName,
     isPreview,
     duration,
     position,
   }) => {
-    return lessonService.createLesson({
-      moduleId,
-      title,
-      description,
-      videoPath,
-      videoName,
-      pdfPath,
-      pdfName,
-      isPreview,
-      duration,
-      position,
-    });
+    // validate file type
+    if (videoFile && !videoFile.type.startsWith("video/")) {
+      throw new Error("Invalid video file.");
+    }
+
+    if (pdfFile && pdfFile.type !== "application/pdf") {
+      throw new Error("Invalid PDF file.");
+    }
+
+    let videoPath = null;
+    let pdfPath = null;
+
+    try {
+      // fetch courseId from modules table
+      const { data, error } = await supabase
+        .from("modules")
+        .select("course_id")
+        .eq("id", moduleId)
+        .single();
+
+      if (error) throw error;
+      const courseId = data.course_id;
+      // upload video on bucket
+      if (videoFile) {
+        const videoFilePath = await generateFilePath(
+          videoName,
+          videoFile,
+          moduleId,
+          courseId,
+        );
+
+        videoPath = await lessonStorage.uploadVideo(videoFilePath, videoFile);
+      }
+
+      // upload pdf on bucket
+      if (pdfFile) {
+        const pdfFilePath = await generateFilePath(
+          pdfName,
+          pdfFile,
+          moduleId,
+          courseId,
+        );
+
+        pdfPath = await lessonStorage.uploadPdf(pdfFilePath, pdfFile);
+      }
+
+      const lesson = await lessonService.createLesson({
+        moduleId,
+        title,
+        description,
+        videoPath,
+        videoName,
+        pdfPath,
+        pdfName,
+        isPreview,
+        duration,
+        position,
+      });
+      return lesson;
+    } catch (error) {
+      if (videoPath) {
+        await lessonStorage.deleteVideo(videoPath);
+      }
+
+      if (pdfPath) {
+        await lessonStorage.deletePdf(pdfPath);
+      }
+
+      throw error;
+    }
   },
 );
 
@@ -74,8 +152,17 @@ export const updateLessonPositions = createAsyncThunk(
 // Thunk for delete lesson
 export const deleteLesson = createAsyncThunk(
   "lesson/deleteLesson",
-  async ({ lessonId }) => {
+  async ({ lessonId, videoPath, pdfPath }) => {
+    // delete lesson
     await lessonService.deleteLesson({ lessonId });
+    // delete video
+    if (videoPath) {
+      await lessonStorage.deleteVideo(videoPath);
+    }
+    // delete pdf
+    if (pdfPath) {
+      await lessonStorage.deletePdf(pdfPath);
+    }
     return lessonId;
   },
 );
