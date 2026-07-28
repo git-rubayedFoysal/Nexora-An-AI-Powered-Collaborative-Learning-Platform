@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import { fetchCourse } from "../../features/course/courseSlice";
 import {
   fetchCourseEnrollments,
@@ -33,24 +33,45 @@ function CourseDetails() {
   const { courseId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { selectedCourse: course, loading } = useSelector((s) => s.course);
   const { courseEnrollments, currentEnrollment } = useSelector((s) => s.enroll);
   const { userData } = useSelector((s) => s.auth);
 
-  useEffect(() => {
-    dispatch(fetchCourse(courseId));
-    dispatch(fetchEnrollment(courseId));
-  }, [dispatch, courseId]);
+  const TABS = [
+    { id: "overview", label: "Overview" },
+    { id: "curriculum", label: "Curriculum" },
+  ];
 
   const isTeacher = userData?.id === course?.teacher_id;
   const isAdmin = userData?.role?.toLowerCase() === "admin";
   const isStudent = userData?.role?.toLowerCase() === "student";
   const isFree = !course?.price || course?.price === 0;
 
+  const showEnrolledTab = isTeacher || isAdmin;
+
+  const initialTab = location.hash?.replace("#", "") || "overview";
+  const [activeTab, setActiveTab] = useState(
+    TABS.some((t) => t.id === initialTab) ||
+      (initialTab === "enrolled" && showEnrolledTab)
+      ? initialTab
+      : "overview",
+  );
+
+  useEffect(() => {
+    dispatch(fetchCourse(courseId));
+    dispatch(fetchEnrollment(courseId));
+  }, [dispatch, courseId]);
+
   useEffect(() => {
     dispatch(fetchCourseEnrollments(courseId));
   }, [dispatch, courseId]);
+
+  function switchTab(id) {
+    setActiveTab(id);
+    navigate(`#${id}`, { replace: true });
+  }
 
   if (loading || !course) {
     return <LoadingState color="--color-violet" content="course..." />;
@@ -73,7 +94,7 @@ function CourseDetails() {
   const studentCount = courseEnrollments.length ?? 0;
 
   return (
-    <div className="max-w-5xl mx-auto mt-20">
+    <div className="max-w-5xl mx-auto mt-20 mb-10">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-slate-dark font-mono mb-6 flex-wrap">
         <button
@@ -163,54 +184,93 @@ function CourseDetails() {
             </div>
           </div>
 
-          {/* Description */}
-          <Section title="About this course">
-            <p className="text-sm text-slate leading-relaxed">
-              {course.description ?? "No description available."}
-            </p>
-          </Section>
+          {/* ── Tab bar ── */}
+          <div className="glass rounded-2xl border border-border p-1.5 flex gap-1">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => switchTab(tab.id)}
+                className={`nav-link flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold font-mono
+                            transition-colors
+                            ${activeTab === tab.id ? "text-white" : "text-slate hover:text-slate-light"}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+            {showEnrolledTab && (
+              <button
+                onClick={() => switchTab("enrolled")}
+                className={`nav-link flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold font-mono
+                            transition-colors whitespace-nowrap
+                            ${activeTab === "enrolled" ? "text-white" : "text-slate hover:text-slate-light"}`}
+              >
+                Enrolled Students{" "}
+                <span className="ml-1 text-[10px] opacity-60">
+                  ({courseEnrollments.length})
+                </span>
+              </button>
+            )}
+          </div>
 
-          {/* Course includes */}
-          <Section title="This course includes">
-            {/* FIX: grid-cols-1 on mobile, 2 on sm+ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <InfoChip icon="👥" label={`${studentCount} students enrolled`} />
-              <InfoChip
-                icon="🎥"
-                label={`${course.lesson_count ?? 0} lessons`}
-              />
-              <InfoChip
-                icon="⏱️"
-                label={
-                  course.duration ? `${course.duration} hours` : "Duration TBA"
-                }
-              />
-              <InfoChip icon="📶" label={course.level ?? "All levels"} />
-              <InfoChip icon="♾️" label="Full lifetime access" />
-              <InfoChip icon="📱" label="Access on all devices" />
-              <InfoChip icon="🏆" label="Certificate of completion" />
-            </div>
-          </Section>
+          {/* ── Tab: Overview ── */}
+          {activeTab === "overview" && (
+            <>
+              <Section title="About this course">
+                <p className="text-sm text-slate leading-relaxed">
+                  {course.description ?? "No description available."}
+                </p>
+              </Section>
 
-          {/* Curriculum placeholder */}
-          <Section title="Course Curriculum">
-            <div
-              className="flex flex-col items-center justify-center py-10 gap-3
-                            rounded-xl border border-dashed border-border-2 bg-glass"
-            >
-              <span className="text-3xl">📋</span>
-              <p className="text-sm font-semibold text-white">
-                Curriculum coming soon
-              </p>
-              <p className="text-xs text-slate-dark text-center max-w-xs">
-                Lessons and modules will appear here once the instructor
-                publishes course content.
-              </p>
-            </div>
-          </Section>
+              <Section title="This course includes">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {isTeacher && (
+                    <InfoChip
+                      icon="👥"
+                      label={`${studentCount} students enrolled`}
+                    />
+                  )}
+                  <InfoChip
+                    icon="🎥"
+                    label={`${course.lesson_count ?? 0} lessons`}
+                  />
+                  <InfoChip
+                    icon="⏱️"
+                    label={
+                      course.duration
+                        ? `${course.duration} hours`
+                        : "Duration TBA"
+                    }
+                  />
+                  <InfoChip icon="📶" label={course.level ?? "All levels"} />
+                  <InfoChip icon="♾️" label="Full lifetime access" />
+                  <InfoChip icon="📱" label="Access on all devices" />
+                  <InfoChip icon="🏆" label="Certificate of completion" />
+                </div>
+              </Section>
+            </>
+          )}
 
-          {/* Enrolled Students — teacher & admin only */}
-          {(isTeacher || isAdmin) && (
+          {/* ── Tab: Curriculum ── */}
+          {activeTab === "curriculum" && (
+            <Section title="Course Curriculum">
+              <div
+                className="flex flex-col items-center justify-center py-10 gap-3
+                              rounded-xl border border-dashed border-border-2 bg-glass"
+              >
+                <span className="text-3xl">📋</span>
+                <p className="text-sm font-semibold text-white">
+                  Curriculum coming soon
+                </p>
+                <p className="text-xs text-slate-dark text-center max-w-xs">
+                  Lessons and modules will appear here once the instructor
+                  publishes course content.
+                </p>
+              </div>
+            </Section>
+          )}
+
+          {/* ── Tab: Enrolled Students (teacher & admin only) ── */}
+          {activeTab === "enrolled" && showEnrolledTab && (
             <Section title={`Enrolled Students (${courseEnrollments.length})`}>
               {courseEnrollments.length === 0 ? (
                 <div
@@ -221,7 +281,6 @@ function CourseDetails() {
                   <p className="text-sm text-slate">No students enrolled yet</p>
                 </div>
               ) : (
-                /* FIX: overflow-x-auto so table scrolls on mobile instead of breaking layout */
                 <div className="overflow-x-auto -mx-1">
                   <table className="w-full text-xs min-w-120">
                     <thead>
@@ -319,7 +378,7 @@ function CourseDetails() {
         {/* ── RIGHT sidebar (1/3) ── */}
         {/* FIX: sidebar stacks below content on mobile, sticky only on lg */}
         <div className="space-y-4 lg:self-start">
-          <div className="glass rounded-2xl border border-border p-5 sm:p-6 lg:sticky lg:top-6">
+          <div className="glass rounded-2xl border border-border p-5 sm:p-6">
             {/* Price */}
             <div className="mb-5 text-center">
               {!currentEnrollment ? (
@@ -385,41 +444,51 @@ function CourseDetails() {
                   icon: "📚",
                   label: "Category",
                   value: course.category ?? "—",
+                  access: "all",
                 },
-                { icon: "📶", label: "Level", value: course.level ?? "—" },
+                {
+                  icon: "📶",
+                  label: "Level",
+                  value: course.level ?? "—",
+                  access: "all",
+                },
                 {
                   icon: "👥",
                   label: "Enrolled",
                   value: `${studentCount} students`,
+                  access: "teacher",
                 },
                 {
                   icon: "🎥",
                   label: "Lessons",
                   value: course.lesson_count ?? 0,
+                  access: "all",
                 },
                 {
                   icon: "⏱️",
                   label: "Duration",
                   value: course.duration ? `${course.duration}h` : "TBA",
+                  access: "all",
                 },
-              ].map((row) => (
-                <div
-                  key={row.label}
-                  className="flex items-center justify-between gap-2"
-                >
-                  <span className="text-xs text-slate flex items-center gap-1.5 shrink-0">
-                    <span>{row.icon}</span> {row.label}
-                  </span>
-                  <span className="text-xs font-semibold text-white font-mono text-right truncate">
-                    {row.value}
-                  </span>
-                </div>
-              ))}
+              ].map((row) =>
+                row.access === "all" || isTeacher ? (
+                  <div
+                    key={row.label}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <span className="text-xs text-slate flex items-center gap-1.5 shrink-0">
+                      <span>{row.icon}</span> {row.label}
+                    </span>
+                    <span className="text-xs font-semibold text-white font-mono text-right truncate">
+                      {row.value}
+                    </span>
+                  </div>
+                ) : null,
+              )}
             </div>
           </div>
 
           {/* Instructor card */}
-          {/* FIX: removed sticky top-127 (arbitrary, broken) */}
           <div className="glass rounded-2xl border border-border p-5">
             <p className="text-[10px] font-mono text-slate-dark uppercase tracking-widest mb-3">
               Instructor

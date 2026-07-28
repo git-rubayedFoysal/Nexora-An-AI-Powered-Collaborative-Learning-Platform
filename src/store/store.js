@@ -3,6 +3,7 @@ import authReducer from "../features/auth/authSlice.js";
 import courseReducer from "../features/course/courseSlice.js";
 import enrollReducer from "../features/enroll/enrollSlice.js";
 import moduleReducer from "../features/module/moduleSlice.js";
+import lessonReducer from "../features/lesson/lessonSlice.js";
 
 // Create the Redux store and configure it with the reducers
 export const store = configureStore({
@@ -11,5 +12,6 @@ export const store = configureStore({
     course: courseReducer,
     enroll: enrollReducer,
     module: moduleReducer,
+    lesson: lessonReducer,
   },
 });
