@@ -7,7 +7,7 @@ import lessonStorage from "../../services/supabase/lesson/lesson.storage";
 
 import {
   createLesson,
-  updateLesson,
+  updateLessonWithFiles,
   fetchModuleLessons,
 } from "../../features/lesson/lessonSlice";
 
@@ -146,17 +146,26 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     setSubmitError("");
     try {
       if (isEdit) {
-        // Update existing lesson
+        // Update existing lesson (with optional file replacements)
         const lessonData = {
           title: data.title,
           description: data.description,
           is_preview: data.isPreview,
+          duration: videoDuration,
+          // Pass old paths so thunk can delete replaced files
+          old_video_path: lesson.video_path,
+          old_pdf_path: lesson.pdf_path,
         };
-        if (videoFile) {
-          lessonData.duration = videoDuration;
-        }
         await dispatch(
-          updateLesson({ lessonId: lesson.id, lessonData }),
+          updateLessonWithFiles({
+            lessonId: lesson.id,
+            moduleId,
+            lessonData,
+            videoFile,
+            videoName: videoFile?.name ?? null,
+            pdfFile,
+            pdfName: pdfFile?.name ?? null,
+          }),
         ).unwrap();
       } else {
         // Create new lesson (video is required)

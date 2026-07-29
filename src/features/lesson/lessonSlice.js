@@ -131,6 +131,83 @@ export const updateLesson = createAsyncThunk(
   },
 );
 
+// Update lesson with optional file replacements (video, PDF)
+// Uploads new files, deletes old ones, updates DB record
+export const updateLessonWithFiles = createAsyncThunk(
+  "lesson/updateLessonWithFiles",
+  async ({
+    lessonId,
+    moduleId,
+    lessonData,
+    videoFile = null,
+    videoName = null,
+    pdfFile = null,
+    pdfName = null,
+  }) => {
+    let newVideoPath = null;
+    let newPdfPath = null;
+
+    try {
+      // Get courseId from the module record
+      const { data: modData, error: modError } = await supabase
+        .from("modules")
+        .select("course_id")
+        .eq("id", moduleId)
+        .single();
+      if (modError) throw modError;
+      const courseId = modData.course_id;
+
+      // Replace video if a new file was provided
+      if (videoFile) {
+        const videoFilePath = await generateFilePath(
+          videoName,
+          videoFile,
+          moduleId,
+          courseId,
+        );
+        newVideoPath = await lessonStorage.uploadVideo(
+          videoFilePath,
+          videoFile,
+        );
+        // Delete old video from storage
+        if (lessonData.old_video_path) {
+          await lessonStorage.deleteVideo(lessonData.old_video_path);
+        }
+        lessonData.video_path = newVideoPath;
+        lessonData.video_name = videoName;
+      }
+
+      // Replace PDF if a new file was provided
+      if (pdfFile) {
+        const pdfFilePath = await generateFilePath(
+          pdfName,
+          pdfFile,
+          moduleId,
+          courseId,
+        );
+        newPdfPath = await lessonStorage.uploadPdf(pdfFilePath, pdfFile);
+        // Delete old PDF from storage
+        if (lessonData.old_pdf_path) {
+          await lessonStorage.deletePdf(lessonData.old_pdf_path);
+        }
+        lessonData.pdf_path = newPdfPath;
+        lessonData.pdf_name = pdfName;
+      }
+
+      // Remove internal fields before DB update
+      delete lessonData.old_video_path;
+      delete lessonData.old_pdf_path;
+
+      return lessonService.updateLesson({ lessonId, lessonData });
+    } catch (error) {
+      // Rollback uploaded files if DB update fails
+      if (newVideoPath) await lessonStorage.deleteVideo(newVideoPath);
+      if (newPdfPath) await lessonStorage.deletePdf(newPdfPath);
+      throw error;
+    }
+  },
+);
+
 // Save new lesson order after drag and drop
 export const updateLessonPositions = createAsyncThunk(
   "lesson/updateLessonPositions",
@@ -222,6 +299,29 @@ const lessonSlice = createSlice({
         }
       })
       .addCase(updateLesson.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    builder
+      .addCase(updateLessonWithFiles.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateLessonWithFiles.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.lessons.findIndex(
+          (lesson) => lesson.id === action.payload.id,
+        );
+        if (index !== -1) {
+          state.lessons[index] = action.payload;
+        }
+        state.lessons.sort((a, b) => a.position - b.position);
+        if (state.selectedLesson?.id === action.payload.id) {
+          state.selectedLesson = action.payload;
+        }
+      })
+      .addCase(updateLessonWithFiles.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error?.message;
       });
