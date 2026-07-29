@@ -2,23 +2,33 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../../services/supabase/supabaseClient";
 import lessonService from "../../services/supabase/lesson/lesson.service";
 import lessonStorage from "../../services/supabase/lesson/lesson.storage";
+import authService from "../../services/supabase/auth/auth.service";
 
 // generate uniqe file path for video
-function generateFilePath(fileName, file, moduleId, courseId) {
-  // extract extention
+async function generateFilePath(fileName, file, moduleId, courseId) {
+  // Get authenticated user
+  const user = await authService.getUser();
+
+  if (!user) {
+    throw new Error("User not found.");
+  }
+
+  // Extract extension
   const extension = file.name.split(".").pop()?.toLowerCase();
 
-  // sanitized file name(remove space and invalid charecters)
+  // Sanitize filename
   const sanitizedName = (fileName || file.name)
+    .replace(/\.[^/.]+$/, "") // Remove original extension
     .trim()
     .replace(/[^a-zA-Z0-9-_]/g, "-")
+    .replace(/-+/g, "-") // Collapse multiple hyphens
     .toLowerCase();
 
-  // create unique file name
+  // Unique filename
   const uniqueName = `${sanitizedName}-${Date.now()}`;
 
-  // return uniqe filepath
-  return `${courseId}/${moduleId}/${uniqueName}.${extension}`;
+  // Final path
+  return `${user.id}/${courseId}/${moduleId}/${uniqueName}.${extension}`;
 }
 
 const initialState = {

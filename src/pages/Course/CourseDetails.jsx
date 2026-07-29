@@ -13,6 +13,9 @@ import {
   CourseCurriculum,
 } from "../../components";
 
+// ─── Sub-components ─────────────────────────────────────────────────────────
+
+/** InfoChip — small label with icon + text, used in course stats grid */
 function InfoChip({ icon, label }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-glass-2 border border-border">
@@ -22,6 +25,7 @@ function InfoChip({ icon, label }) {
   );
 }
 
+/** Section — glass container with a title, used for tab content */
 function Section({ title, children }) {
   return (
     <div className="glass rounded-2xl border border-border p-5 sm:p-6">
@@ -33,28 +37,57 @@ function Section({ title, children }) {
   );
 }
 
+// ─── Main Component ─────────────────────────────────────────────────────────
+
+/**
+ * CourseDetails
+ *
+ * Full course detail page with tabbed navigation.
+ * URL: /courses/:courseId
+ *
+ * Tabs:
+ *  - Overview   — course description + stats chips (all users)
+ *  - Curriculum — expandable modules with lessons (all users, uses CourseCurriculum)
+ *  - Enrolled   — student enrollment table (teacher/admin only)
+ *
+ * Sidebar:
+ *  - Price display or enrollment status
+ *  - CTA button (Edit Course / Enroll Now / Start Learning)
+ *  - Quick stats (category, level, lessons, duration)
+ *  - Instructor card
+ *
+ * Data fetched on mount:
+ *  - fetchCourse(courseId) — course details
+ *  - fetchEnrollment(courseId) — current user's enrollment status
+ *  - fetchCourseEnrollments(courseId) — all enrollments (for enrolled students tab)
+ */
 function CourseDetails() {
   const { courseId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ── Redux selectors ───────────────────────────────────────────────────
   const { selectedCourse: course, loading } = useSelector((s) => s.course);
   const { courseEnrollments, currentEnrollment } = useSelector((s) => s.enroll);
   const { userData } = useSelector((s) => s.auth);
 
+  // ── Tab configuration ─────────────────────────────────────────────────
   const TABS = [
     { id: "overview", label: "Overview" },
     { id: "curriculum", label: "Curriculum" },
   ];
 
+  // ── Role checks ───────────────────────────────────────────────────────
   const isTeacher = userData?.id === course?.teacher_id;
   const isAdmin = userData?.role?.toLowerCase() === "admin";
   const isStudent = userData?.role?.toLowerCase() === "student";
   const isFree = !course?.price || course?.price === 0;
 
+  // Only teachers/admins see the "Enrolled Students" tab
   const showEnrolledTab = isTeacher || isAdmin;
 
+  // ── Active tab state (synced with URL hash) ───────────────────────────
   const initialTab = location.hash?.replace("#", "") || "overview";
   const [activeTab, setActiveTab] = useState(
     TABS.some((t) => t.id === initialTab) ||
@@ -63,41 +96,48 @@ function CourseDetails() {
       : "overview",
   );
 
+  // ── Fetch course data on mount ────────────────────────────────────────
   useEffect(() => {
     dispatch(fetchCourse(courseId));
     dispatch(fetchEnrollment(courseId));
   }, [dispatch, courseId]);
 
+  // ── Fetch all enrollments for this course (teacher/admin tab) ─────────
   useEffect(() => {
     dispatch(fetchCourseEnrollments(courseId));
   }, [dispatch, courseId]);
 
-  // Course Carriculum
+  // ── Create Module modal state ─────────────────────────────────────────
   const [isOpen, setIsOpen] = useState(false);
-  // set scroll disable when open modal
+
+  // Lock body scroll when Create Module modal is open
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "auto";
-
     return () => (document.body.style.overflow = "auto");
   }, [isOpen]);
 
+  /** Toggle the Create Module modal */
   function handleModal() {
     setIsOpen((prev) => !prev);
   }
 
+  /** Switch active tab and update URL hash */
   function switchTab(id) {
     setActiveTab(id);
     navigate(`#${id}`, { replace: true });
   }
 
+  // ── Loading state ─────────────────────────────────────────────────────
   if (loading || !course) {
     return <LoadingState color="--color-violet" content="course..." />;
   }
 
+  // ── Derived values ────────────────────────────────────────────────────
   const thumbnail = course.thumbnail_url
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
     : "/placeholder-course.png";
 
+  // Course status badge config (published / draft / archived)
   const statusCfg =
     {
       published: {
@@ -110,9 +150,10 @@ function CourseDetails() {
 
   const studentCount = courseEnrollments.length ?? 0;
 
+  // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="max-w-5xl mx-auto mt-20 mb-10">
-      {/* Breadcrumb */}
+      {/* Breadcrumb navigation */}
       <div className="flex items-center gap-2 text-xs text-slate-dark font-mono mb-6 flex-wrap">
         <button
           onClick={() => navigate("/courses")}
@@ -136,9 +177,9 @@ function CourseDetails() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* ── LEFT (2/3) ── */}
+        {/* ── LEFT COLUMN (2/3 width) ── */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Hero thumbnail */}
+          {/* Hero thumbnail with status badge + price overlay */}
           <div className="relative rounded-2xl overflow-hidden border border-border">
             <img
               src={thumbnail}
@@ -148,11 +189,13 @@ function CourseDetails() {
               }}
               className="w-full h-48 sm:h-72 object-cover brightness-90"
             />
+            {/* Gradient fade at bottom */}
             <div
               className="absolute inset-x-0 bottom-0 h-24
                             bg-linear-to-t from-navy-2 to-transparent"
             />
 
+            {/* Status badge (teacher/admin only, not visible to students) */}
             {statusCfg && !isStudent && (
               <span
                 className={`absolute flex items-center gap-1 top-3 right-3
@@ -163,6 +206,7 @@ function CourseDetails() {
               </span>
             )}
 
+            {/* Price tag (shown only when user is NOT enrolled) */}
             {!currentEnrollment && (
               <div className="absolute bottom-3 left-4">
                 <span
@@ -175,7 +219,7 @@ function CourseDetails() {
             )}
           </div>
 
-          {/* Title + meta */}
+          {/* Course title + meta tags (category, level, updated date) */}
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-white leading-snug mb-3 font-display">
               {course.title}
@@ -201,7 +245,7 @@ function CourseDetails() {
             </div>
           </div>
 
-          {/* ── Tab bar ── */}
+          {/* ── Tab bar ────────────────────────────────────────────────── */}
           <div className="glass rounded-2xl border border-border p-1.5 flex gap-1">
             {TABS.map((tab) => (
               <button
@@ -214,6 +258,7 @@ function CourseDetails() {
                 {tab.label}
               </button>
             ))}
+            {/* Enrolled Students tab (teacher/admin only) */}
             {showEnrolledTab && (
               <button
                 onClick={() => switchTab("enrolled")}
@@ -229,7 +274,7 @@ function CourseDetails() {
             )}
           </div>
 
-          {/* ── Tab: Overview ── */}
+          {/* ── Tab: Overview ──────────────────────────────────────────── */}
           {activeTab === "overview" && (
             <>
               <Section title="About this course">
@@ -240,6 +285,7 @@ function CourseDetails() {
 
               <Section title="This course includes">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Student count (teacher only) */}
                   {isTeacher && (
                     <InfoChip
                       icon="👥"
@@ -267,13 +313,14 @@ function CourseDetails() {
             </>
           )}
 
-          {/* ── Tab: Curriculum ── */}
+          {/* ── Tab: Curriculum ────────────────────────────────────────── */}
           {activeTab === "curriculum" && (
             <div className="glass rounded-2xl border border-border p-5 sm:p-6">
               <div className="mb-4 flex justify-between items-center">
                 <h2 className="text-sm font-bold text-white font-display">
                   Course Curriculum
                 </h2>
+                {/* Create Module button (teacher/admin only) */}
                 {!isStudent && (
                   <button
                     className="btn-secondary border py-2 px-3 rounded-lg text-xs font-semibold text-white flex gap-1 justify-center items-center"
@@ -292,21 +339,23 @@ function CourseDetails() {
                   </button>
                 )}
               </div>
-              <CourseCurriculum courseId={courseId} handleModal={handleModal} />
+              {/* Pass enrollment status so curriculum shows play/lock icons correctly */}
+              <CourseCurriculum courseId={courseId} isEnrolled={Boolean(currentEnrollment)} />
             </div>
           )}
 
-          {/* Create Module Modal */}
+          {/* Create Module modal (rendered once, toggled by isOpen) */}
           <CreateModuleModal
             open={isOpen}
             onClose={() => setIsOpen(false)}
             courseId={courseId}
           />
 
-          {/* ── Tab: Enrolled Students (teacher & admin only) ── */}
+          {/* ── Tab: Enrolled Students (teacher & admin only) ──────────── */}
           {activeTab === "enrolled" && showEnrolledTab && (
             <Section title={`Enrolled Students (${courseEnrollments.length})`}>
               {courseEnrollments.length === 0 ? (
+                /* Empty state when no students enrolled */
                 <div
                   className="flex flex-col items-center justify-center py-8 gap-2
                                 rounded-xl border border-dashed border-border-2 bg-glass"
@@ -315,6 +364,7 @@ function CourseDetails() {
                   <p className="text-sm text-slate">No students enrolled yet</p>
                 </div>
               ) : (
+                /* Enrollments table */
                 <div className="overflow-x-auto -mx-1">
                   <table className="w-full text-xs min-w-120">
                     <thead>
@@ -343,9 +393,11 @@ function CourseDetails() {
                           key={enroll.id}
                           className="border-b border-border/50 hover:bg-glass transition-colors"
                         >
+                          {/* Row number */}
                           <td className="py-3 px-3 font-mono text-slate-dark">
                             {String(idx + 1).padStart(2, "0")}
                           </td>
+                          {/* Student name + avatar */}
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2">
                               <div
@@ -361,9 +413,11 @@ function CourseDetails() {
                               </span>
                             </div>
                           </td>
+                          {/* Email */}
                           <td className="py-3 px-3 text-slate truncate max-w-30">
                             {enroll.users?.email ?? "—"}
                           </td>
+                          {/* Enrollment date */}
                           <td className="py-3 px-3 text-slate font-mono whitespace-nowrap">
                             {new Date(enroll.enrolled_at).toLocaleDateString(
                               "en-GB",
@@ -374,6 +428,7 @@ function CourseDetails() {
                               },
                             )}
                           </td>
+                          {/* Progress bar */}
                           <td className="py-3 px-3">
                             <div className="flex items-center gap-2 min-w-20">
                               <div className="prog flex-1">
@@ -387,6 +442,7 @@ function CourseDetails() {
                               </span>
                             </div>
                           </td>
+                          {/* Status badge */}
                           <td className="py-3 px-3">
                             <span
                               className={`tag font-mono border
@@ -409,13 +465,14 @@ function CourseDetails() {
           )}
         </div>
 
-        {/* ── RIGHT sidebar (1/3) ── */}
-        {/* FIX: sidebar stacks below content on mobile, sticky only on lg */}
+        {/* ── RIGHT SIDEBAR (1/3 width) ────────────────────────────────── */}
+        {/* Sticky on desktop, stacks below on mobile */}
         <div className="space-y-4 lg:self-start">
           <div className="glass rounded-2xl border border-border p-5 sm:p-6">
-            {/* Price */}
+            {/* Price / enrollment status */}
             <div className="mb-5 text-center">
               {!currentEnrollment ? (
+                /* Not enrolled — show price */
                 <div>
                   <span
                     className={`text-3xl font-black font-mono
@@ -430,14 +487,16 @@ function CourseDetails() {
                   )}
                 </div>
               ) : (
+                /* Already enrolled — show confirmation */
                 <p className="tag bg-teal-dim border border-teal/25 text-teal font-bold">
                   ✔ You're already enrolled in this course.
                 </p>
               )}
             </div>
 
-            {/* CTA */}
+            {/* Primary CTA button — varies by role and enrollment status */}
             {isTeacher || isAdmin ? (
+              /* Teacher/Admin: Edit Course button */
               <button
                 onClick={() => navigate(`/dashboard/edit-course/${course.id}`)}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white
@@ -447,6 +506,7 @@ function CourseDetails() {
                 Edit Course
               </button>
             ) : !currentEnrollment ? (
+              /* Student (not enrolled): Enroll button */
               <button
                 onClick={() => navigate(`/courses/${courseId}/checkout`)}
                 className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3"
@@ -454,6 +514,7 @@ function CourseDetails() {
                 {isFree ? "Enroll for Free" : "Enroll Now"}
               </button>
             ) : (
+              /* Student (enrolled): Start Learning button */
               <button
                 onClick={() => navigate(`/dashboard/my-learning`)}
                 className="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-white mb-3"
@@ -462,6 +523,7 @@ function CourseDetails() {
               </button>
             )}
 
+            {/* Go Back button */}
             <button
               onClick={() => navigate(-1)}
               className="w-full py-2.5 rounded-xl text-sm font-semibold
@@ -471,7 +533,7 @@ function CourseDetails() {
               Go Back
             </button>
 
-            {/* Quick stats */}
+            {/* Quick stats sidebar section */}
             <div className="mt-5 pt-5 border-t border-border space-y-3">
               {[
                 {
@@ -490,7 +552,7 @@ function CourseDetails() {
                   icon: "👥",
                   label: "Enrolled",
                   value: `${studentCount} students`,
-                  access: "teacher",
+                  access: "teacher", // only visible to teachers
                 },
                 {
                   icon: "🎥",
@@ -505,6 +567,7 @@ function CourseDetails() {
                   access: "all",
                 },
               ].map((row) =>
+                /* Show row if access is "all" or user is teacher */
                 row.access === "all" || isTeacher ? (
                   <div
                     key={row.label}

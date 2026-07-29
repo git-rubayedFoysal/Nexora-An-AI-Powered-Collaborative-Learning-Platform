@@ -30,7 +30,11 @@ import EmptyState from "./EmptyState";
 import LoadingState from "./LoadingState";
 import SearchBar from "./SearchBar";
 import CreateModuleModal from "./Course/CreateModuleModal";
-import CourseCurriculum from "../pages/Course/CourseCurriculum";
+import ModuleModal from "./Course/ModuleModal";
+import CourseCurriculum from "./Course/CourseCurriculum";
+import EditModuleModal from "./Course/EditModuleModal";
+import LessonModal from "./Course/LessonModal";
+import CreateLessonModal from "./Course/CreateLessonModal";
 
 export {
   Input,
@@ -65,5 +69,9 @@ export {
   LoadingState,
   SearchBar,
   CreateModuleModal,
+  ModuleModal,
   CourseCurriculum,
+  EditModuleModal,
+  LessonModal,
+  CreateLessonModal,
 };
