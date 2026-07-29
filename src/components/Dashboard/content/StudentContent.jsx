@@ -1,3 +1,4 @@
+// Student dashboard home — enrolled courses, due assignments, quiz performance
 import { getGreeting } from "../../../utils/greeting";
 import { fetchMyEnrollments } from "../../../features/enroll/enrollSlice";
 import { useSelector, useDispatch } from "react-redux";

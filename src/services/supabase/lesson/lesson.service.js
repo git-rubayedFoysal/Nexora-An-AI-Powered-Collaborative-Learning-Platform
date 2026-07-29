@@ -1,7 +1,8 @@
 import { supabase } from "../supabaseClient";
 
+// Database operations for lessons (create, read, update, delete)
 class LessonService {
-  // create lesson
+  // Save a new lesson to the database
   async createLesson({
     moduleId,
     title,
@@ -32,11 +33,10 @@ class LessonService {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 
-  // get all lessons of a module
+  // Get all lessons for a module
   async getModuleLessons({ moduleId }) {
     const { data, error } = await supabase
       .from("lessons")
@@ -45,11 +45,10 @@ class LessonService {
       .order("position", { ascending: true });
 
     if (error) throw error;
-
     return data;
   }
 
-  // get a lesson by lessonId
+  // Get a single lesson by ID
   async getLessonById({ lessonId }) {
     const { data, error } = await supabase
       .from("lessons")
@@ -58,11 +57,10 @@ class LessonService {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 
-  // update a lesson
+  // Update a lesson
   async updateLesson({ lessonId, lessonData }) {
     const { data, error } = await supabase
       .from("lessons")
@@ -72,11 +70,10 @@ class LessonService {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 
-  // update lesson position(reorder)
+  // Update lesson order after drag and drop
   async updateLessonPositions({ reorderedLessons }) {
     if (!Array.isArray(reorderedLessons) || reorderedLessons.length === 0) {
       throw new Error("Invalid reordered modules data.");
@@ -88,14 +85,14 @@ class LessonService {
           .from("lessons")
           .update({ position })
           .eq("id", id);
-
         if (error) throw error;
       }),
     );
+
     return true;
   }
 
-  // delete lesson
+  // Delete a lesson from the database
   async deleteLesson({ lessonId }) {
     const { error } = await supabase
       .from("lessons")
@@ -103,7 +100,6 @@ class LessonService {
       .eq("id", lessonId);
 
     if (error) throw error;
-
     return true;
   }
 }

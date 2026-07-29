@@ -1,3 +1,4 @@
+// Feature cards grid — shows platform capabilities
 function FeatureSection() {
   const featuresData = [
     {

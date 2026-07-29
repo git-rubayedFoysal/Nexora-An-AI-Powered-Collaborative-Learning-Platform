@@ -1,3 +1,4 @@
+// Student's enrolled courses list — pagination, explore more button
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { fetchMyEnrollments } from "../../../features/enroll/enrollSlice";

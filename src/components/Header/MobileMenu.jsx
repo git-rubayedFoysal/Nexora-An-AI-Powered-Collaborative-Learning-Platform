@@ -1,25 +1,11 @@
+// Mobile slide-down menu for guest users (small screens only)
 import { useNavigate } from "react-router";
 import { Button } from "../index";
 import { useSelector } from "react-redux";
-
-/**
- * MobileMenu
- * ----------
- * Slide-down menu shown on **small screens (< lg)** for **guest** users.
- *
- * Animates open/close via `max-height` + `opacity` transitions.
- * Contains a search bar, the same nav links as the desktop header,
- * and Login / Get Started CTA buttons stacked side-by-side.
- *
- * Props:
- *  - isOpen  : boolean                            — drives the CSS transition
- *  - links   : Array<{ name: string, slug: string }> — nav items to render
- *  - onClose : () => void                         — collapses the menu
- */
 function MobileMenu({ isOpen, links, onClose }) {
   const navigate = useNavigate();
 
-  /* Navigate then close so the menu collapses immediately after a tap */
+  /* Navigate then close menu */
   function goTo(path) {
     navigate(path);
     onClose();
@@ -39,7 +25,7 @@ function MobileMenu({ isOpen, links, onClose }) {
       ].join(" ")}
     >
       <div className="border-t border-white/6 px-4 py-4 space-y-1">
-        {/* ── Nav links ── */}
+        {/* Nav links */}
         {links.map((item) => (
           <a
             key={item.slug}
@@ -52,7 +38,7 @@ function MobileMenu({ isOpen, links, onClose }) {
           </a>
         ))}
 
-        {/* ── Login + Get Started side-by-side ── */}
+        {/* Login + Get Started buttons */}
         {!authStatus && (
           <div className="flex gap-2 pt-3">
             <Button

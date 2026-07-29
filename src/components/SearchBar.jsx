@@ -1,21 +1,6 @@
 import { Input } from "./index";
 
-/**
- * SearchBar
- * ---------
- * A reusable search input with a magnifier icon positioned absolutely
- * inside the input via `pl-9` padding offset.
- *
- * Used in three places:
- *   1. Centre of the desktop authenticated header
- *   2. Right side of the desktop guest header (narrower, w-44)
- *   3. Inside the mobile slide-down menu
- *
- * Props:
- *  - placeholder : string  — placeholder text shown inside the input
- *  - className   : string  — additional Tailwind classes for the wrapper <div>
- *  - inputClass  : string  — additional Tailwind classes for the <Input> itself
- */
+// Search input with a magnifier icon and a clear button
 function SearchBar({
   placeholder = "Search…",
   className = "",
@@ -25,7 +10,7 @@ function SearchBar({
 }) {
   return (
     <div className={`relative ${className}`}>
-      {/* Magnifier icon — non-interactive, sits on top of the input */}
+      {/* Magnifier icon on the left side */}
       <svg
         className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate pointer-events-none"
         fill="none"

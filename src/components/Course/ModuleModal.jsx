@@ -1,3 +1,4 @@
+// Create or edit module modal — renders via portal to escape stacking contexts
 import { useForm } from "react-hook-form";
 import { createPortal } from "react-dom";
 import { Input, Textarea, Button } from "../index";
@@ -8,25 +9,6 @@ import {
   updateModule,
   fetchCourseModules,
 } from "../../features/module/moduleSlice";
-
-/**
- * ModuleModal — reusable modal for creating and updating course modules.
- *
- * Renders via createPortal to document.body to escape parent stacking contexts.
- *
- * Props:
- *  - open     : boolean — controls modal visibility
- *  - onClose  : () => void — called after successful save or on cancel
- *  - courseId : string — the parent course this module belongs to
- *  - module   : object | null — null = create mode, object = edit mode
- *
- * Behavior:
- *  - On open: fetches existing modules (for position calculation) and resets form
- *  - Create mode: appends `modules.length + 1` as position
- *  - Edit mode: pre-fills form with module title and description
- *  - On submit: dispatches createModule or updateModule, then closes
- *  - On error: displays error banner inside the modal
- */
 function ModuleModal({ open, onClose, courseId, module = null }) {
   // ── Mode flag ────────────────────────────────────────────────────────
   const isEdit = Boolean(module);

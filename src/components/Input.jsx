@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 
+// A text input with an optional label above it
 const Input = forwardRef(
   ({ label, type = "text", className = "", ...props }, ref) => {
     const id = useId();

@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { Button, Input, Textarea } from "../index";
 import { useSelector, useDispatch } from "react-redux";
 import lessonStorage from "../../services/supabase/lesson/lesson.storage";
-// import { supabase } from "../../services/supabase/supabaseClient";
 
 import {
   createLesson,
@@ -12,10 +11,7 @@ import {
   fetchModuleLessons,
 } from "../../features/lesson/lessonSlice";
 
-/**
- * Convert seconds to a human-readable duration string (e.g. "5m 32s").
- * Returns empty string if the value is invalid.
- */
+// Turn seconds into "5m 32s" or "1h 5m 2s"
 function formatDuration(seconds) {
   if (seconds == null || Number.isNaN(seconds)) return "";
   seconds = Math.round(seconds);
@@ -24,39 +20,26 @@ function formatDuration(seconds) {
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
 
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${secs}s`;
-  }
-
-  if (minutes > 0) {
-    return `${minutes}m ${secs}s`;
-  }
-
+  if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
   return `${secs}s`;
 }
 
-/**
- * LessonModal — reusable for both create and update.
- *
- * Props:
- *  - open     : boolean — controls visibility
- *  - onClose  : () => void — called after successful submit or cancel
- *  - moduleId : string — the parent module this lesson belongs to
- *  - lesson   : object | null — null = create mode, object = edit mode
- */
+// Modal for creating or editing a lesson
+// - open: show or hide the modal
+// - onClose: called when the modal closes
+// - moduleId: which module this lesson belongs to
+// - lesson: pass a lesson object to edit, null to create new
 function LessonModal({ open, onClose, moduleId, lesson = null }) {
-  // ─── Mode flag ────────────────────────────────────────────────
   const isEdit = Boolean(lesson);
 
-  // ─── Local state ──────────────────────────────────────────────
-  const [submitError, setSubmitError] = useState(""); // server/validation error banner
-  const [videoFile, setVideoFile] = useState(null); // newly selected video file (create or replace)
-  const [pdfFile, setPdfFile] = useState(null); // newly selected PDF file (create or replace)
-  const [pickedDuration, setPickedDuration] = useState(null); // duration extracted from picked video
+  const [submitError, setSubmitError] = useState("");
+  const [videoFile, setVideoFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pickedDuration, setPickedDuration] = useState(null);
   const dispatch = useDispatch();
-  const { lessons } = useSelector((s) => s.lesson); // used to calculate next position
+  const { lessons } = useSelector((s) => s.lesson);
 
-  // ─── React Hook Form ──────────────────────────────────────────
   const {
     handleSubmit,
     register,
@@ -70,27 +53,24 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     },
   });
 
-  // ─── Derived preview URLs ─────────────────────────────────────
-  // Prefer the newly picked file; fall back to existing lesson paths.
-  // Computed inline — cheap enough that memoization isn't needed.
+  // Preview the selected video or show the existing one
   const videoPreview = videoFile
     ? URL.createObjectURL(videoFile)
     : lesson?.video_path
       ? lessonStorage.getVideoUrl(lesson.video_path)
       : null;
 
+  // Preview the selected PDF or show the existing one
   const pdfPreview = pdfFile
     ? URL.createObjectURL(pdfFile)
     : lesson?.pdf_path
       ? lessonStorage.getPdfUrl(lesson.pdf_path)
       : null;
 
-  // Duration: newly picked value wins, otherwise use the saved lesson duration
+  // Use the newly picked duration, or the saved one
   const videoDuration = pickedDuration ?? lesson?.duration ?? null;
 
-  // ─── Form sync & cleanup ──────────────────────────────────────
-  // When the modal opens in edit mode, pre-fill the form with lesson data.
-  // When it closes, reset all local file state so the next open is clean.
+  // Fill the form when editing, clear it when creating
   useEffect(() => {
     if (open && lesson) {
       reset({
@@ -102,6 +82,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
       reset({ title: "", description: "", isPreview: false });
     }
 
+    // Clear file picks when the modal closes
     return () => {
       if (!open) {
         setVideoFile(null);
@@ -112,17 +93,14 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     };
   }, [open, lesson, reset]);
 
-  // ─── Fetch lessons for position calculation ────────────────────
-  // We need the current lesson count to assign the next position number.
+  // Load existing lessons so we can calculate the next position number
   useEffect(() => {
     if (open) {
       dispatch(fetchModuleLessons({ moduleId }));
     }
   }, [dispatch, moduleId, open]);
 
-  // ─── Video duration extraction ─────────────────────────────────
-  // Creates a temporary hidden <video> element to read metadata.duration
-  // from the selected file without playing it.
+  // Read the video duration from the file without playing it
   function extractVideoDuration(file) {
     return new Promise((resolve) => {
       const url = URL.createObjectURL(file);
@@ -140,12 +118,10 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     });
   }
 
-  // ─── File selection handlers ───────────────────────────────────
   async function handleVideoChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     setVideoFile(file);
-    // Extract and store duration so it can be sent with the lesson data
     const duration = await extractVideoDuration(file);
     setPickedDuration(Math.round(duration));
   }
@@ -156,7 +132,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     setPdfFile(file);
   }
 
-  // ─── File removal handlers ─────────────────────────────────────
   function removeVideo() {
     setVideoFile(null);
     setPickedDuration(null);
@@ -166,21 +141,17 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     setPdfFile(null);
   }
 
-  // ─── Form submission ──────────────────────────────────────────
-  // Handles both create and update flows.
-  // On success: resets form, clears file state, closes modal.
-  // On failure: displays error in the banner.
+  // Save the lesson to the database
   async function onSubmit(data) {
     setSubmitError("");
     try {
       if (isEdit) {
-        // ── Update flow ──
+        // Update existing lesson
         const lessonData = {
           title: data.title,
           description: data.description,
           is_preview: data.isPreview,
         };
-        // Only update duration if a new video was picked
         if (videoFile) {
           lessonData.duration = videoDuration;
         }
@@ -188,8 +159,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
           updateLesson({ lessonId: lesson.id, lessonData }),
         ).unwrap();
       } else {
-        // ── Create flow ──
-        // Video is required for new lessons
+        // Create new lesson (video is required)
         if (!videoFile) {
           setSubmitError("Please upload a lesson video.");
           return;
@@ -210,7 +180,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
         ).unwrap();
       }
 
-      // Success — clean up and close
+      // Close the modal on success
       reset();
       setVideoFile(null);
       setPdfFile(null);
@@ -221,27 +191,9 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
     }
   }
 
-  // async function test() {
-  //   const {
-  //     data: { user },
-  //   } = await supabase.auth.getUser();
-
-  //   console.log("User ID:", user.id);
-
-  //   const { data, error } = await supabase
-  //     .from("courses")
-  //     .select("id, teacher_id")
-  //     .eq("id", "4dc8d8c6-444a-42b5-9d60-f677e9b5ae16")
-  //     .single();
-
-  //   console.log(data);
-  // }
-
-  // test();
-
   if (!open) return null;
 
-  // ─── Portal: renders outside parent stacking contexts ──────────
+  // Render outside the parent so the backdrop covers everything
   return createPortal(
     <div
       className="fixed inset-0 z-200 flex items-center justify-center p-4"
@@ -254,14 +206,13 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
       }}
     >
       <div className="glass2 w-full max-w-2xl rounded-2xl border border-white/8 shadow-[0_24px_60px_rgba(0,0,0,0.5)] p-7 max-h-[90vh] overflow-y-auto scrollbar-none">
-        {/* ── Modal Header ── */}
+        {/* Header with icon */}
         <div className="flex items-center gap-3 mb-6">
           <div
             className={`inline-flex items-center justify-center w-10 h-10 rounded-xl border
               ${isEdit ? "bg-teal-dim border-teal/25" : "bg-violet/15 border-violet/25"}`}
           >
             {isEdit ? (
-              // Pencil icon for edit mode
               <svg
                 className="w-5 h-5 text-teal-light"
                 fill="none"
@@ -276,7 +227,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
                 />
               </svg>
             ) : (
-              // Plus icon for create mode
               <svg
                 className="w-5 h-5 text-violet-light"
                 fill="none"
@@ -305,7 +255,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* ── Error Banner ── */}
           {submitError && (
             <div className="flex items-start gap-3 rounded-2xl border border-coral/25 bg-coral-dim px-5 py-4">
               <svg
@@ -327,7 +276,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
             </div>
           )}
 
-          {/* ── Lesson Title Field ── */}
           <div>
             <Input
               label="Lesson Title"
@@ -344,7 +292,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
             )}
           </div>
 
-          {/* ── Lesson Description Field ── */}
           <div>
             <Textarea
               label="Lesson Description"
@@ -362,7 +309,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
             )}
           </div>
 
-          {/* ── Free Preview Toggle ── */}
+          {/* Free preview toggle — lets non-enrolled students watch */}
           <div className="flex items-center justify-between rounded-xl border border-white/8 bg-glass-2 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-white">Free Preview</p>
@@ -385,9 +332,8 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
             </label>
           </div>
 
-          {/* ── Video Upload Section ── */}
+          {/* Video upload */}
           <section className="glass rounded-2xl p-5 space-y-4">
-            {/* Section header with title + duration badge */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-white font-display">
@@ -399,7 +345,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
                   </span>
                 )}
               </div>
-              {/* Show extracted/saved duration when available */}
               {videoDuration !== null && (
                 <span className="text-[10px] font-mono text-teal bg-teal-dim px-2 py-0.5 rounded-full border border-teal/25">
                   {formatDuration(videoDuration)}
@@ -407,7 +352,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
               )}
             </div>
 
-            {/* Video player preview — shows when a video is selected or exists */}
+            {/* Show video player when a video is selected */}
             {videoPreview && (
               <div className="relative rounded-xl overflow-hidden border border-border">
                 <video
@@ -415,7 +360,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
                   controls
                   className="w-full h-52 object-cover bg-black"
                 />
-                {/* Remove button overlay */}
                 <button
                   type="button"
                   onClick={removeVideo}
@@ -439,7 +383,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
               </div>
             )}
 
-            {/* Video drop-zone — shown when no video is selected */}
+            {/* Show drop zone when no video is selected */}
             {!videoPreview && (
               <label
                 className="flex flex-col items-center justify-center gap-3 rounded-xl
@@ -476,7 +420,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
               </label>
             )}
 
-            {/* Replace video button — shown after a video is loaded */}
+            {/* Replace video button */}
             {videoPreview && (
               <label className="block">
                 <div
@@ -509,9 +453,8 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
             )}
           </section>
 
-          {/* ── PDF Upload Section ── */}
+          {/* PDF upload (optional) */}
           <section className="glass rounded-2xl p-5 space-y-4">
-            {/* Section header */}
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-white font-display">
                 Lesson File
@@ -521,10 +464,9 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
               </span>
             </div>
 
-            {/* PDF file card — shown when a PDF is selected or exists */}
+            {/* Show file card when a PDF is selected */}
             {pdfPreview && (
               <div className="relative flex items-center gap-3 rounded-xl border border-border bg-glass px-4 py-3">
-                {/* PDF icon */}
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-coral-dim border border-coral/25">
                   <svg
                     className="w-5 h-5 text-coral"
@@ -540,14 +482,12 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
                     />
                   </svg>
                 </div>
-                {/* File name + type */}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-white font-medium truncate">
                     {pdfFile?.name ?? lesson?.pdf_name ?? "Document"}
                   </p>
                   <p className="text-[11px] text-slate-dark">PDF file</p>
                 </div>
-                {/* Remove button */}
                 <button
                   type="button"
                   onClick={removePdf}
@@ -570,7 +510,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
               </div>
             )}
 
-            {/* PDF drop-zone — shown when no PDF is selected */}
+            {/* Show drop zone when no PDF is selected */}
             {!pdfPreview && (
               <label
                 className="flex flex-col items-center justify-center gap-3 rounded-xl
@@ -605,7 +545,7 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
               </label>
             )}
 
-            {/* Replace PDF button — shown after a PDF is loaded */}
+            {/* Replace PDF button */}
             {pdfPreview && (
               <label className="block">
                 <div
@@ -638,7 +578,6 @@ function LessonModal({ open, onClose, moduleId, lesson = null }) {
             )}
           </section>
 
-          {/* ── Action Buttons ── */}
           <div className="flex gap-3 pt-1">
             <Button
               type="button"

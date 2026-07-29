@@ -4,30 +4,21 @@ import lessonService from "../../services/supabase/lesson/lesson.service";
 import lessonStorage from "../../services/supabase/lesson/lesson.storage";
 import authService from "../../services/supabase/auth/auth.service";
 
-// generate uniqe file path for video
+// Build a file path for uploading lesson files
+// Example: userId/courseId/moduleId/name-timestamp.mp4
 async function generateFilePath(fileName, file, moduleId, courseId) {
-  // Get authenticated user
   const user = await authService.getUser();
+  if (!user) throw new Error("User not found.");
 
-  if (!user) {
-    throw new Error("User not found.");
-  }
-
-  // Extract extension
   const extension = file.name.split(".").pop()?.toLowerCase();
-
-  // Sanitize filename
   const sanitizedName = (fileName || file.name)
-    .replace(/\.[^/.]+$/, "") // Remove original extension
+    .replace(/\.[^/.]+$/, "")
     .trim()
     .replace(/[^a-zA-Z0-9-_]/g, "-")
-    .replace(/-+/g, "-") // Collapse multiple hyphens
+    .replace(/-+/g, "-")
     .toLowerCase();
-
-  // Unique filename
   const uniqueName = `${sanitizedName}-${Date.now()}`;
 
-  // Final path
   return `${user.id}/${courseId}/${moduleId}/${uniqueName}.${extension}`;
 }
 
@@ -38,7 +29,7 @@ const initialState = {
   error: null,
 };
 
-// Thunk for create lesson
+// Create a new lesson with video (required) and PDF (optional)
 export const createLesson = createAsyncThunk(
   "lesson/createLesson",
   async ({
@@ -53,34 +44,26 @@ export const createLesson = createAsyncThunk(
     duration,
     position,
   }) => {
-    // Video (Required)
-    if (!videoFile) {
-      throw new Error("Lesson video is required.");
-    }
-
-    if (!videoFile.type.startsWith("video/")) {
+    if (!videoFile) throw new Error("Lesson video is required.");
+    if (!videoFile.type.startsWith("video/"))
       throw new Error("Invalid video file.");
-    }
-
-    // PDF (Optional)
-    if (pdfFile && pdfFile.type !== "application/pdf") {
+    if (pdfFile && pdfFile.type !== "application/pdf")
       throw new Error("Invalid PDF file.");
-    }
 
     let videoPath = null;
     let pdfPath = null;
 
     try {
-      // fetch courseId from modules table
+      // Get courseId from the module record
       const { data, error } = await supabase
         .from("modules")
         .select("course_id")
         .eq("id", moduleId)
         .single();
-
       if (error) throw error;
       const courseId = data.course_id;
-      // upload video on bucket
+
+      // Upload video to storage
       if (videoFile) {
         const videoFilePath = await generateFilePath(
           videoName,
@@ -88,11 +71,10 @@ export const createLesson = createAsyncThunk(
           moduleId,
           courseId,
         );
-
         videoPath = await lessonStorage.uploadVideo(videoFilePath, videoFile);
       }
 
-      // upload pdf on bucket
+      // Upload PDF to storage
       if (pdfFile) {
         const pdfFilePath = await generateFilePath(
           pdfName,
@@ -100,7 +82,6 @@ export const createLesson = createAsyncThunk(
           moduleId,
           courseId,
         );
-
         pdfPath = await lessonStorage.uploadPdf(pdfFilePath, pdfFile);
       }
 
@@ -118,20 +99,15 @@ export const createLesson = createAsyncThunk(
       });
       return lesson;
     } catch (error) {
-      if (videoPath) {
-        await lessonStorage.deleteVideo(videoPath);
-      }
-
-      if (pdfPath) {
-        await lessonStorage.deletePdf(pdfPath);
-      }
-
+      // Delete uploaded files if something goes wrong
+      if (videoPath) await lessonStorage.deleteVideo(videoPath);
+      if (pdfPath) await lessonStorage.deletePdf(pdfPath);
       throw error;
     }
   },
 );
 
-// Thunk for get all lessons of a module
+// Get all lessons for a module
 export const fetchModuleLessons = createAsyncThunk(
   "lesson/fetchModuleLessons",
   async ({ moduleId }) => {
@@ -139,7 +115,7 @@ export const fetchModuleLessons = createAsyncThunk(
   },
 );
 
-// Thunk for get a lesson by ID
+// Get a single lesson by ID
 export const fetchLessonById = createAsyncThunk(
   "lesson/fetchLessonById",
   async ({ lessonId }) => {
@@ -147,7 +123,7 @@ export const fetchLessonById = createAsyncThunk(
   },
 );
 
-// Thunk for update lesson
+// Update lesson info (title, description, etc.)
 export const updateLesson = createAsyncThunk(
   "lesson/updateLesson",
   async ({ lessonId, lessonData }) => {
@@ -155,7 +131,7 @@ export const updateLesson = createAsyncThunk(
   },
 );
 
-// Thunk for update lesson position
+// Save new lesson order after drag and drop
 export const updateLessonPositions = createAsyncThunk(
   "lesson/updateLessonPositions",
   async ({ reorderedLessons }) => {
@@ -164,20 +140,13 @@ export const updateLessonPositions = createAsyncThunk(
   },
 );
 
-// Thunk for delete lesson
+// Delete a lesson and its files from storage
 export const deleteLesson = createAsyncThunk(
   "lesson/deleteLesson",
   async ({ lessonId, videoPath, pdfPath }) => {
-    // delete lesson
     await lessonService.deleteLesson({ lessonId });
-    // delete video
-    if (videoPath) {
-      await lessonStorage.deleteVideo(videoPath);
-    }
-    // delete pdf
-    if (pdfPath) {
-      await lessonStorage.deletePdf(pdfPath);
-    }
+    if (videoPath) await lessonStorage.deleteVideo(videoPath);
+    if (pdfPath) await lessonStorage.deletePdf(pdfPath);
     return lessonId;
   },
 );
@@ -186,7 +155,6 @@ const lessonSlice = createSlice({
   name: "lesson",
   initialState,
   extraReducers: (builder) => {
-    // create lesson
     builder
       .addCase(createLesson.pending, (state) => {
         state.loading = true;
@@ -202,7 +170,6 @@ const lessonSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // get module lessons
     builder
       .addCase(fetchModuleLessons.pending, (state) => {
         state.loading = true;
@@ -220,7 +187,6 @@ const lessonSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // get a lesson by ID
     builder
       .addCase(fetchLessonById.pending, (state) => {
         state.loading = true;
@@ -237,7 +203,6 @@ const lessonSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // update a lesson
     builder
       .addCase(updateLesson.pending, (state) => {
         state.loading = true;
@@ -248,11 +213,9 @@ const lessonSlice = createSlice({
         const index = state.lessons.findIndex(
           (lesson) => lesson.id === action.payload.id,
         );
-
         if (index !== -1) {
           state.lessons[index] = action.payload;
         }
-
         state.lessons.sort((a, b) => a.position - b.position);
         if (state.selectedLesson?.id === action.payload.id) {
           state.selectedLesson = action.payload;
@@ -263,7 +226,6 @@ const lessonSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // update lessons position
     builder
       .addCase(updateLessonPositions.pending, (state) => {
         state.loading = true;
@@ -271,13 +233,9 @@ const lessonSlice = createSlice({
       })
       .addCase(updateLessonPositions.fulfilled, (state, action) => {
         state.loading = false;
-        const reordered = action.payload;
-
-        reordered.forEach(({ id, position }) => {
+        action.payload.forEach(({ id, position }) => {
           const lesson = state.lessons.find((l) => l.id === id);
-          if (lesson) {
-            lesson.position = position;
-          }
+          if (lesson) lesson.position = position;
         });
         state.lessons.sort((a, b) => a.position - b.position);
       })
@@ -285,7 +243,7 @@ const lessonSlice = createSlice({
         state.loading = false;
         state.error = action.error?.message;
       });
-    // delete lesson
+
     builder
       .addCase(deleteLesson.pending, (state) => {
         state.loading = true;
@@ -296,7 +254,6 @@ const lessonSlice = createSlice({
         state.lessons = state.lessons.filter(
           (lesson) => lesson.id !== action.payload,
         );
-
         if (state.selectedLesson?.id === action.payload) {
           state.selectedLesson = null;
         }

@@ -1,3 +1,4 @@
+// Auth header controls — notifications bell, avatar dropdown, mobile toggle
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
@@ -6,22 +7,6 @@ import AvatarDropdown from "./AvatarDropdown";
 import { Button } from "../index";
 import authService from "../../services/supabase/auth/auth.service";
 import { useLocation } from "react-router";
-
-/**
- * AuthActions
- * -----------
- * Right-side controls rendered when the user **is** logged in.
- *
- * Contains (left → right):
- *  1. Mobile search icon button (visible only on <md screens)
- *  2. Notification bell with an unread green dot
- *  3. AvatarDropdown — avatar button + slide-down profile menu
- *
- * Props:
- *  - initials    : string  — 1-2 uppercase initials for the avatar circle
- *  - displayName : string  — user's full name
- *  - displayEmail: string  — user's email address
- */
 function AuthActions({
   initials,
   displayName,
@@ -32,10 +17,10 @@ function AuthActions({
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  /* Local state: controls the avatar dropdown open/close */
+  /* Local state for avatar dropdown */
   const [avatarOpen, setAvatarOpen] = useState(false);
 
-  /* Dispatch logout action, close dropdown, then redirect to /login */
+  /* Sign out, close dropdown, redirect to login */
   async function handleLogout() {
     setAvatarOpen(false);
 
@@ -49,7 +34,7 @@ function AuthActions({
 
   return (
     <div className="flex items-center gap-2 ml-auto">
-      {/* ── Notification bell with unread indicator dot ── */}
+      {/* Notifications bell with unread dot */}
       <Button
         type="button"
         className="relative p-2 rounded-lg text-slate hover:text-white
@@ -73,7 +58,7 @@ function AuthActions({
         <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-teal border-2 border-navy" />
       </Button>
 
-      {/* ── Avatar dropdown (profile menu) ── */}
+      {/* Avatar dropdown menu */}
       <AvatarDropdown
         initials={initials}
         displayName={displayName}
@@ -84,7 +69,7 @@ function AuthActions({
         onLogout={handleLogout}
       />
 
-      {/* ── Hamburger / close toggle (mobile only, lg:hidden) ── */}
+      {/* Hamburger toggle (mobile only, homepage only) */}
       {location.pathname === "/" && (
         <Button
           type="button"

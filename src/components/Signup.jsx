@@ -1,3 +1,4 @@
+// Signup form — name, email, password, role selection
 import authService from "../services/supabase/auth/auth.service";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
@@ -10,7 +11,7 @@ function Signup() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // sign up a new user with email, password, full name, and role
+  // Register new user and redirect to verify email
   const create = async (data) => {
     if (loading) return;
     setError("");

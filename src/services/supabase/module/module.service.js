@@ -1,7 +1,8 @@
 import { supabase } from "../supabaseClient";
 
+// Database operations for modules (create, read, update, delete)
 class ModuleService {
-  // create a module
+  // Save a new module to the database
   async createModule({ courseId, title, description, position }) {
     const { data, error } = await supabase
       .from("modules")
@@ -14,14 +15,11 @@ class ModuleService {
       .select()
       .single();
 
-    if (error) {
-      throw error;
-    }
-
+    if (error) throw error;
     return data;
   }
 
-  // get CourseModules
+  // Get all modules for a course
   async getCourseModules({ courseId }) {
     const { data, error } = await supabase
       .from("modules")
@@ -30,11 +28,10 @@ class ModuleService {
       .order("position", { ascending: true });
 
     if (error) throw error;
-
     return data;
   }
 
-  // get a single module
+  // Get a single module by ID
   async getModuleById({ moduleId }) {
     const { data, error } = await supabase
       .from("modules")
@@ -43,11 +40,10 @@ class ModuleService {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 
-  // update module data
+  // Update a module
   async updateModule({ moduleId, moduleData }) {
     const { data, error } = await supabase
       .from("modules")
@@ -60,7 +56,7 @@ class ModuleService {
     return data;
   }
 
-  // update module positions (reorder)
+  // Update module order after drag and drop
   async updateModulePositions({ reorderedModules }) {
     if (!Array.isArray(reorderedModules) || reorderedModules.length === 0) {
       throw new Error("Invalid reordered modules data.");
@@ -72,17 +68,14 @@ class ModuleService {
           .from("modules")
           .update({ position })
           .eq("id", id);
-
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       }),
     );
 
     return true;
   }
 
-  // delete module
+  // Delete a module (lessons are deleted automatically)
   async deleteModule({ moduleId }) {
     const { error } = await supabase
       .from("modules")
@@ -90,7 +83,6 @@ class ModuleService {
       .eq("id", moduleId);
 
     if (error) throw error;
-
     return true;
   }
 }

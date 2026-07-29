@@ -1,3 +1,4 @@
+// Main header — shows logo, nav links, and auth/guest controls
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useSelector } from "react-redux";
@@ -10,7 +11,6 @@ import MobileMenu from "./MobileMenu";
 
 function Header() {
   const userData = useSelector((state) => state.auth.userData);
-  // console.log(userData);
 
   const authStatus = userData ? true : false;
 
@@ -31,7 +31,7 @@ function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  /* ── Close mobile menu on route change / resize ── */
+  /* Close mobile menu on auth change */
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
@@ -41,7 +41,7 @@ function Header() {
     setMobileOpen((prev) => !prev);
   }
 
-  /* ── Derive avatar initials from userData ── */
+  /* Build avatar initials from user name */
   const initials = userData?.full_name
     ? userData?.full_name
         .split(" ")
@@ -53,7 +53,7 @@ function Header() {
   const displayName = userData?.full_name ?? "User";
   const displayEmail = userData?.email ?? "";
 
-  /* ── Nav links (guests only) ── */
+  /* Guest nav links */
   const navLinks = [
     { name: "Features", slug: "#features" },
     { name: "Courses", slug: "#courses" },
@@ -68,24 +68,22 @@ function Header() {
         scrolled ? "shadow-[0_4px_32px_rgba(0,0,0,.45)]" : "",
       ].join(" ")}
     >
-      {/* ── Glass bar ── */}
+      {/* Glass header bar */}
       <div className="glass border-b border-white/6">
         {/* start auth nav */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-17 gap-4 justify-between">
             <div className="flex items-center gap-14">
-              {/* ── Logo ── */}
+              {/* Logo */}
               <Link to="/" className="flex items-center gap-2.5 shrink-0">
                 <Logo />
               </Link>
 
-              {/* ── Desktop guest nav links ── */}
+              {/* Desktop nav links (guests only) */}
               <NavLinks links={navLinks} />
             </div>
 
-            {/* ══════════════════════════════════
-                RIGHT SIDE — GUEST
-            ══════════════════════════════════ */}
+            {/* Right side: guest actions (login, get started) */}
 
             {!authStatus && (
               <GuestActions
@@ -94,9 +92,7 @@ function Header() {
               />
             )}
 
-            {/* ══════════════════════════════════
-                RIGHT SIDE — AUTHENTICATED
-            ══════════════════════════════════ */}
+            {/* Right side: auth actions (notifications, avatar) */}
 
             {authStatus && (
               <AuthActions
@@ -112,9 +108,8 @@ function Header() {
           </div>
         </div>
 
-        {/* ── Mobile menu (guests only) ── */}
+        {/* Mobile slide-down menu (guests only) */}
         <MobileMenu isOpen={mobileOpen} links={navLinks} onClose={onClose} />
-        {/* end mobile menu */}
       </div>
     </header>
   );

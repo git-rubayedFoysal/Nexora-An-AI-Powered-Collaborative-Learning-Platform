@@ -1,7 +1,8 @@
+// Enrollment Redux slice — enroll, unenroll, fetch enrollments, update progress
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import enrollService from "../../services/supabase/enrollment/enroll.service";
 
-// ─── Initial State ──────────────────────────────────────────────────────────
+// Initial state
 const initialState = {
   myEnrollments: [],       // Courses the current student is enrolled in (with courses join)
   courseEnrollments: [],   // Students enrolled in a specific course (teacher/admin view)
@@ -11,12 +12,10 @@ const initialState = {
   totalCourses: 0,         // Total enrolled courses count (for pagination)
 };
 
-// ─── Thunks ─────────────────────────────────────────────────────────────────
+// Thunks
 
 /**
- * Enroll the current user in a course.
- * Checks for existing enrollment before inserting (prevents duplicates).
- * Returns the raw enrollment row (no courses join).
+ * Enroll in a course — checks for duplicates before inserting.
  */
 export const enrollCourse = createAsyncThunk(
   "enroll/enrollCourse",
@@ -26,8 +25,7 @@ export const enrollCourse = createAsyncThunk(
 );
 
 /**
- * Remove the current user's enrollment from a course.
- * Returns the courseId for state cleanup.
+ * Unenroll from a course — removes the enrollment row.
  */
 export const unenrollCourse = createAsyncThunk(
   "enroll/unenrollCourse",
@@ -38,9 +36,7 @@ export const unenrollCourse = createAsyncThunk(
 );
 
 /**
- * Fetch the current user's enrollment for a specific course.
- * Used by CourseDetails to determine if the user is enrolled.
- * Returns null if not enrolled.
+ * Check if current user is enrolled in a course.
  */
 export const fetchEnrollment = createAsyncThunk(
   "enroll/fetchEnrollment",
@@ -50,9 +46,7 @@ export const fetchEnrollment = createAsyncThunk(
 );
 
 /**
- * Fetch the current student's enrolled courses (with pagination).
- * Returns { courses: [...], total: number }.
- * courses[] includes the full course object via Supabase join.
+ * Fetch student's enrolled courses (paginated).
  */
 export const fetchMyEnrollments = createAsyncThunk(
   "enroll/fetchMyEnrollments",
@@ -62,8 +56,7 @@ export const fetchMyEnrollments = createAsyncThunk(
 );
 
 /**
- * Fetch all students enrolled in a specific course (teacher/admin view).
- * Returns enrollment rows with user info via Supabase join.
+ * Fetch all students enrolled in a course (teacher/admin view).
  */
 export const fetchCourseEnrollments = createAsyncThunk(
   "enroll/fetchCourseEnrollments",
@@ -73,8 +66,7 @@ export const fetchCourseEnrollments = createAsyncThunk(
 );
 
 /**
- * Update the progress percentage for the current user's enrollment.
- * Automatically sets status to "completed" when progress >= 100.
+ * Update enrollment progress — auto-sets "completed" when >= 100.
  */
 export const updateProgress = createAsyncThunk(
   "enroll/updateProgress",
@@ -83,13 +75,13 @@ export const updateProgress = createAsyncThunk(
   },
 );
 
-// ─── Slice ──────────────────────────────────────────────────────────────────
+// Slice
 
 const enrollSlice = createSlice({
   name: "enroll",
   initialState,
   extraReducers: (builder) => {
-    // ── enrollCourse ─────────────────────────────────────────────────────
+    // enrollCourse handlers
     // On success: only set currentEnrollment. Don't push raw enrollment into
     // myEnrollments because it lacks the courses join and would cause
     // duplicates or broken UI when fetchMyEnrollments runs later.
@@ -107,7 +99,7 @@ const enrollSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // ── unenrollCourse ───────────────────────────────────────────────────
+    // unenrollCourse handlers
     // On success: remove the enrollment from myEnrollments list and clear
     // currentEnrollment if it matches the unenrolled course.
     builder
@@ -129,7 +121,7 @@ const enrollSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // ── fetchEnrollment ──────────────────────────────────────────────────
+    // fetchEnrollment handlers
     // On success: set currentEnrollment (or null if not enrolled).
     builder
       .addCase(fetchEnrollment.pending, (state) => {
@@ -145,7 +137,7 @@ const enrollSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // ── fetchMyEnrollments ───────────────────────────────────────────────
+    // fetchMyEnrollments handlers — page 1 replaces, page > 1 appends
     // On success: replaces entire array for page 1, appends for page > 1.
     // The payload.courses[] includes full course data via Supabase join.
     builder
@@ -173,7 +165,7 @@ const enrollSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // ── fetchCourseEnrollments ───────────────────────────────────────────
+    // fetchCourseEnrollments handlers
     // On success: replace the entire courseEnrollments list.
     // Used by CourseDetails "Enrolled Students" tab (teacher/admin only).
     builder
@@ -190,7 +182,7 @@ const enrollSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // ── updateProgress ───────────────────────────────────────────────────
+    // updateProgress handlers — syncs all three state locations
     // On success: updates the enrollment in all three state locations
     // (currentEnrollment, myEnrollments, courseEnrollments) if the
     // course_id matches. Keeps all views in sync.

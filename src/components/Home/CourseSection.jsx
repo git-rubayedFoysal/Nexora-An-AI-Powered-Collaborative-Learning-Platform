@@ -1,3 +1,4 @@
+// Featured courses grid — fetches and displays popular courses
 import { Link } from "react-router";
 import { CourseCard } from "../index";
 import { fetchFeatureCourses } from "../../features/course/courseSlice";

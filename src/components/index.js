@@ -1,3 +1,4 @@
+// Re-export all shared components
 import Input from "./Input";
 import Button from "./Button";
 import Login from "./Login";
@@ -35,6 +36,7 @@ import CourseCurriculum from "./Course/CourseCurriculum";
 import EditModuleModal from "./Course/EditModuleModal";
 import LessonModal from "./Course/LessonModal";
 import CreateLessonModal from "./Course/CreateLessonModal";
+import EditLessonModal from "./Course/EditLessonModal";
 
 export {
   Input,
@@ -74,4 +76,5 @@ export {
   EditModuleModal,
   LessonModal,
   CreateLessonModal,
+  EditLessonModal,
 };

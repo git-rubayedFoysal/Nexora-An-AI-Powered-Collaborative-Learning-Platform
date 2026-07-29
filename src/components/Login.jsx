@@ -1,3 +1,4 @@
+// Login form — email/password sign in with validation
 import authService from "../services/supabase/auth/auth.service";
 import { Link, useNavigate } from "react-router";
 import { useState } from "react";
@@ -10,7 +11,7 @@ function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // log in a user with email, password redirect to the role based dashboard
+  // Sign in and redirect to dashboard
   const login = async (data) => {
     if (loading) return;
     setError("");

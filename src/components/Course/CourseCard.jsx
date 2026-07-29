@@ -1,7 +1,8 @@
+// Course card — shows thumbnail, info, and actions based on user role
 import { Button } from "../index";
 import courseStorage from "../../services/supabase/course/course.storage";
 
-/* ── Status chip config — one source of truth ── */
+// Status badge styles for teacher/admin variants
 const STATUS_CONFIG = {
   published: {
     label: "Published",
@@ -30,13 +31,14 @@ function CourseCard({
 }) {
   const statusCfg = STATUS_CONFIG[course.status?.toLowerCase()] ?? null;
 
+  // Get thumbnail URL or fallback to placeholder
   const publicUrl = course.thumbnail_url
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
     : "/placeholder-course.png";
 
   return (
     <div className="course-card glass rounded-2xl overflow-hidden border border-border flex flex-col">
-      {/* ── Thumbnail ── */}
+      {/* Thumbnail image */}
       <div className="relative h-48 overflow-hidden">
         <img
           src={publicUrl}
@@ -73,7 +75,7 @@ function CourseCard({
         )}
       </div>
 
-      {/* ── Body ── */}
+      {/* Card body */}
       <div className="flex flex-col flex-1 p-5">
         {/* Title */}
         <h3
@@ -161,7 +163,7 @@ function CourseCard({
           </div>
         )}
 
-        {/* ── Actions ── */}
+        {/* Action buttons */}
         <div className="mt-auto pt-5">
           {variant === "student" && (
             <Button

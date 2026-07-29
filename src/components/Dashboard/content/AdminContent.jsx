@@ -1,3 +1,4 @@
+// Admin dashboard home — platform stats, user management, course overview
 import { fetchCourseStats } from "../../../features/course/courseSlice";
 import { fetchUserStats } from "../../../features/auth/authSlice";
 import { useDispatch, useSelector } from "react-redux";

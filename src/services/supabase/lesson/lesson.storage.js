@@ -1,17 +1,11 @@
 import { supabase } from "../supabaseClient";
 
+// Upload, delete, and get URLs for lesson files (videos and PDFs)
 class LessonStorage {
-  // Lesson Video
-
-  // upload video
+  // Upload a video file
   async uploadVideo(filePath, videoFile) {
-    if (!filePath) {
-      throw new Error("Invalid file path.");
-    }
-
-    if (!videoFile) {
-      throw new Error("Video file is required.");
-    }
+    if (!filePath) throw new Error("Invalid file path.");
+    if (!videoFile) throw new Error("Video file is required.");
 
     const { data, error } = await supabase.storage
       .from("lesson-videos")
@@ -21,14 +15,13 @@ class LessonStorage {
       });
 
     if (error) throw error;
-
     return data.path;
   }
-  // delete video
+
+  // Delete a video file
   async deleteVideo(filePath) {
-    if (!filePath) {
-      throw new Error("Invalid file path.");
-    }
+    if (!filePath) throw new Error("Invalid file path.");
+
     const { error } = await supabase.storage
       .from("lesson-videos")
       .remove([filePath]);
@@ -37,11 +30,10 @@ class LessonStorage {
     return true;
   }
 
-  // get video public url
+  // Get the public URL for a video
   getVideoUrl(filePath) {
-    if (!filePath) {
-      throw new Error("Invalid file path.");
-    }
+    if (!filePath) throw new Error("Invalid file path.");
+
     const { data } = supabase.storage
       .from("lesson-videos")
       .getPublicUrl(filePath);
@@ -49,17 +41,11 @@ class LessonStorage {
     return data.publicUrl;
   }
 
-  // Lesson PDF
-
-  // upload pdf
+  // Upload a PDF file
   async uploadPdf(filePath, pdfFile) {
-    if (!filePath) {
-      throw new Error("Invalid file path.");
-    }
+    if (!filePath) throw new Error("Invalid file path.");
+    if (!pdfFile) throw new Error("PDF file is required.");
 
-    if (!pdfFile) {
-      throw new Error("PDF file is required.");
-    }
     const { data, error } = await supabase.storage
       .from("lesson-files")
       .upload(filePath, pdfFile, {
@@ -68,14 +54,13 @@ class LessonStorage {
       });
 
     if (error) throw error;
-
     return data.path;
   }
-  // delete pdf
+
+  // Delete a PDF file
   async deletePdf(filePath) {
-    if (!filePath) {
-      throw new Error("Invalid file path.");
-    }
+    if (!filePath) throw new Error("Invalid file path.");
+
     const { error } = await supabase.storage
       .from("lesson-files")
       .remove([filePath]);
@@ -84,11 +69,10 @@ class LessonStorage {
     return true;
   }
 
-  // get pdf public url
+  // Get the public URL for a PDF
   getPdfUrl(filePath) {
-    if (!filePath) {
-      throw new Error("Invalid file path.");
-    }
+    if (!filePath) throw new Error("Invalid file path.");
+
     const { data } = supabase.storage
       .from("lesson-files")
       .getPublicUrl(filePath);

@@ -1,3 +1,4 @@
+// Dashboard top bar — logo, auth actions, mobile menu toggle
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Logo, Button } from "../index";
@@ -7,7 +8,7 @@ import { useSelector } from "react-redux";
 function DashboardHeader({ mobileOpen, onMenuToggle }) {
   const [scrolled, setScrolled] = useState(false);
   const user = useSelector((state) => state.auth.userData);
-  //   const user = userData?.user_metadata;
+  // Add shadow on scroll
 
   const initials = user?.full_name
     ? user.full_name
@@ -34,11 +35,11 @@ function DashboardHeader({ mobileOpen, onMenuToggle }) {
         scrolled ? "shadow-[0_4px_32px_rgba(0,0,0,.45)]" : "",
       ].join(" ")}
     >
-      {/* ── Glass bar ── */}
+      {/* Glass header bar */}
       <div className="glass border-b border-white/6">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-17 gap-4">
-            {/* ── Logo ── */}
+            {/* Logo */}
             <div className="flex">
               <Link
                 to="/dashboard"
@@ -48,14 +49,14 @@ function DashboardHeader({ mobileOpen, onMenuToggle }) {
               </Link>
             </div>
 
-            {/* Navbar for auth users */}
+            {/* Auth actions + mobile toggle */}
             <div className="flex">
               <AuthActions
                 initials={initials}
                 displayName={displayName}
                 displayEmail={displayEmail}
               />
-              {/* ── Hamburger / close toggle (mobile only, lg:hidden) ── */}
+              {/* Mobile hamburger toggle */}
               <Button
                 type="button"
                 onClick={onMenuToggle}

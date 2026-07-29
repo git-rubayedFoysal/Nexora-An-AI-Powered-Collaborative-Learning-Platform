@@ -9,16 +9,25 @@ import {
   fetchModuleLessons,
   deleteLesson,
 } from "../../features/lesson/lessonSlice";
-import { EditModuleModal, DeleteConfirmModal, CreateLessonModal } from "..";
+import {
+  EditModuleModal,
+  DeleteConfirmModal,
+  CreateLessonModal,
+  EditLessonModal,
+} from "..";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /** Convert seconds to human-readable duration (e.g. "4m 32s", "1h 5m") */
 function formatDuration(seconds) {
   if (!seconds || seconds <= 0) return "0m";
+  // Get full hours from total seconds
   const h = Math.floor(seconds / 3600);
+  // Get remaining minutes after removing hours
   const m = Math.floor((seconds % 3600) / 60);
+  // Get leftover seconds
   const s = Math.floor(seconds % 60);
+  // Format based on largest unit: hours > minutes > seconds
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
@@ -70,15 +79,20 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
   }, [dispatch, courseId]);
 
   // ── Lazy-load lessons for a single module ────────────────────────────────
-  // Dispatches fetchModuleLessons, stores result in local state keyed by moduleId.
-  // Tracks loading state per-module so each module shows its own spinner.
+  // Only runs when user first clicks to expand a module.
+  // Step 1: Mark module as loading (shows spinner)
+  // Step 2: Ask Redux for lessons from Supabase
+  // Step 3: Store result in local cache keyed by moduleId
+  // Step 4: Remove loading indicator when done (success or error)
   const loadModuleLessons = useCallback(
     (moduleId) => {
+      // Step 1: Add moduleId to loading set → shows spinner
       setLoadingModules((prev) => {
         const next = new Set(prev);
         next.add(moduleId);
         return next;
       });
+      // Step 2 & 3: Fetch from Supabase, store in local cache
       dispatch(fetchModuleLessons({ moduleId }))
         .unwrap()
         .then((data) => {
@@ -86,6 +100,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
         })
         .catch(() => {})
         .finally(() => {
+          // Step 4: Remove from loading set → hides spinner
           setLoadingModules((prev) => {
             const next = new Set(prev);
             next.delete(moduleId);
@@ -97,14 +112,20 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
   );
 
   // ── Refresh lessons for a module (after create/edit/delete) ──────────────
-  // Same as loadModuleLessons but used to refetch after mutations.
+  // Same steps as loadModuleLessons, but called after mutations to get fresh data.
+  // Step 1: Mark module as loading
+  // Step 2: Fetch fresh lessons from Supabase
+  // Step 3: Update local cache with new data
+  // Step 4: Clear loading indicator
   const refreshModuleLessons = useCallback(
     (moduleId) => {
+      // Step 1: Show spinner for this module
       setLoadingModules((prev) => {
         const next = new Set(prev);
         next.add(moduleId);
         return next;
       });
+      // Step 2 & 3: Refetch and update cache
       dispatch(fetchModuleLessons({ moduleId }))
         .unwrap()
         .then((data) => {
@@ -112,6 +133,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
         })
         .catch(() => {})
         .finally(() => {
+          // Step 4: Hide spinner
           setLoadingModules((prev) => {
             const next = new Set(prev);
             next.delete(moduleId);
@@ -123,17 +145,21 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
   );
 
   // ── Toggle module expand/collapse ────────────────────────────────────────
-  // If expanding and lessons haven't been loaded yet, triggers lazy load.
+  // Step 1: If already expanded → collapse it (remove from set)
+  // Step 2: If collapsed → expand it (add to set)
+  // Step 3: Lazy-load lessons only on first expand (if not cached yet)
   const toggleModule = useCallback(
     (moduleId) => {
       setExpandedModules((prev) => {
         const next = new Set(prev);
+        // Step 1: Already expanded → collapse
         if (next.has(moduleId)) {
           next.delete(moduleId);
           return next;
         }
+        // Step 2: Collapsed → expand
         next.add(moduleId);
-        // Lazy-load lessons only on first expand
+        // Step 3: Lazy-load only on first expand
         if (!moduleLessons[moduleId]) {
           loadModuleLessons(moduleId);
         }
@@ -144,31 +170,38 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
   );
 
   // ── Delete module handler ────────────────────────────────────────────────
-  // Dispatches deleteModule, cleans up local lesson/expand state, closes modal.
+  // Step 1: Delete module from Supabase via Redux
+  // Step 2: Remove cached lessons for this module
+  // Step 3: Remove from expanded set if it was open
+  // Step 4: Close the delete modal
   async function handleDelete() {
     const deletedId = deleteTarget.id;
+    // Step 1: Delete from database
     await dispatch(deleteModule({ moduleId: deletedId }));
-    // Remove cached lessons for the deleted module
+    // Step 2: Remove lessons cache for deleted module
     setModuleLessons((prev) => {
       const next = { ...prev };
       delete next[deletedId];
       return next;
     });
-    // Remove from expanded set if it was open
+    // Step 3: Remove from expanded set if it was open
     setExpandedModules((prev) => {
       const next = new Set(prev);
       next.delete(deletedId);
       return next;
     });
+    // Step 4: Close modal
     setDeleteTarget(null);
   }
 
   // ── Delete lesson handler ────────────────────────────────────────────────
-  // Dispatches deleteLesson (also removes video/PDF from storage),
-  // then refreshes the parent module's lesson list.
+  // Step 1: Delete lesson + its video/PDF files from Supabase storage
+  // Step 2: Refresh parent module's lesson list
+  // Step 3: Close the delete modal
   async function handleDeleteLesson() {
     if (!lessonDeleteTarget) return;
     try {
+      // Step 1: Delete lesson row + video/PDF files from storage
       await dispatch(
         deleteLesson({
           lessonId: lessonDeleteTarget.id,
@@ -176,24 +209,31 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
           pdfPath: lessonDeleteTarget.pdf_path,
         }),
       ).unwrap();
+      // Step 2: Refresh parent module's lessons
       refreshModuleLessons(lessonDeleteTarget.module_id);
     } catch {
       // error handled in slice
     } finally {
+      // Step 3: Close modal
       setLessonDeleteTarget(null);
     }
   }
 
   // ── Lesson saved callback (create or edit) ───────────────────────────────
   // Called when a lesson modal closes after successful save.
-  // Refreshes the relevant module's lesson list and clears modal state.
+  // Step 1: Refresh lessons for the module we added a lesson to
+  // Step 2: Refresh lessons for the module we edited a lesson in
+  // Step 3: Clear both modal target states
   function handleLessonSaved() {
+    // Step 1: Refresh if we were adding a lesson
     if (addLessonTarget?.id) {
       refreshModuleLessons(addLessonTarget.id);
     }
+    // Step 2: Refresh if we were editing a lesson
     if (editLessonTarget?.module_id) {
       refreshModuleLessons(editLessonTarget.module_id);
     }
+    // Step 3: Clear modal targets (closes modals)
     setAddLessonTarget(null);
     setEditLessonTarget(null);
   }
@@ -222,6 +262,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
     <>
       <div className="space-y-2">
         {modules.map((mod) => {
+          // Per-module computed values
           const isExpanded = expandedModules.has(mod.id);
           const lessons = moduleLessons[mod.id] || [];
           const isLoading = loadingModules.has(mod.id);
@@ -370,19 +411,21 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
               {/* ── Expanded Lessons Section ──────────────────────────────── */}
               {isExpanded && (
                 <div className="ml-6 mt-1 mb-2 rounded-xl border border-white/5 bg-white/5 overflow-hidden">
-                  {/* Loading spinner while fetching lessons */}
+                  {/* Three possible states for expanded content: */}
                   {isLoading ? (
+                    /* State 1: Loading — show spinner while fetching lessons */
                     <div className="px-5 py-6 text-center">
                       <p className="text-xs text-slate-dark">
                         Loading lessons…
                       </p>
                     </div>
                   ) : lessons.length === 0 ? (
-                    /* Empty state when no lessons exist yet */
+                    /* State 2: Empty — no lessons yet in this module */
                     <div className="px-5 py-6 text-center">
                       <p className="text-xs text-slate-dark">
                         No lessons in this module yet.
                       </p>
+                      {/* Teacher/Admin: show "Add first lesson" link */}
                       {!isStudent && (
                         <button
                           onClick={() => setAddLessonTarget(mod)}
@@ -393,13 +436,13 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
                       )}
                     </div>
                   ) : (
-                    /* Lesson list with video/PDF sub-rows */
+                    /* State 3: Has lessons — render lesson list */
                     <div className="divide-y divide-white/5">
                       {lessons.map((lesson) => (
                         <div key={lesson.id}>
                           {/* ── Main lesson row ──────────────────────────── */}
                           <div className="flex items-center gap-3 px-5 py-2.5 hover:bg-white/3 transition-colors">
-                            {/* Lesson position number */}
+                            {/* Lesson position number: "01", "02", etc. */}
                             <span className="text-[10px] font-mono text-slate-dark w-5 text-right shrink-0">
                               {String(lesson.position).padStart(2, "0")}
                             </span>
@@ -416,7 +459,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
                               {formatDuration(lesson.duration)}
                             </span>
 
-                            {/* Student: play (enrolled) or lock (non-enrolled non-preview) icon */}
+                            {/* Student: play button (if enrolled or preview) or lock icon (restricted) */}
                             {isStudent && (
                               <span className="shrink-0">
                                 {isEnrolled || lesson.is_preview ? (
@@ -517,7 +560,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
                           </div>
 
                           {/* ── Video sub-row ──────────────────────────── */}
-                          {/* Shows when lesson has a video attachment */}
+                          {/* Indented row below lesson — only shown if lesson has a video file */}
                           {lesson.video_path && (
                             <div className="flex items-center gap-3 pl-12 pr-5 py-1.5 hover:bg-white/2 transition-colors">
                               {/* Video camera icon (violet) */}
@@ -588,7 +631,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
                           )}
 
                           {/* ── PDF sub-row ───────────────────────────── */}
-                          {/* Shows when lesson has a PDF attachment */}
+                          {/* Indented row below lesson — only shown if lesson has a PDF file */}
                           {lesson.pdf_path && (
                             <div className="flex items-center gap-3 pl-12 pr-5 py-1.5 hover:bg-white/2 transition-colors">
                               {/* PDF document icon (coral) */}
@@ -691,6 +734,9 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
       </div>
 
       {/* ── Modals ──────────────────────────────────────────────────────────── */}
+      {/* All modals rendered at root level (outside module list).
+          Each opens when its target state is non-null.
+          onClose callbacks either refresh data or clear state. */}
 
       {/* Delete Module — confirmation dialog */}
       <DeleteConfirmModal
@@ -727,7 +773,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
 
       {/* Edit Lesson — opens LessonModal in edit mode */}
       {editLessonTarget && (
-        <CreateLessonModal
+        <EditLessonModal
           open={Boolean(editLessonTarget)}
           onClose={handleLessonSaved}
           moduleId={editLessonTarget.module_id}

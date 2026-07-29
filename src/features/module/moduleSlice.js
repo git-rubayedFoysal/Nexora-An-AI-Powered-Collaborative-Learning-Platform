@@ -8,7 +8,7 @@ const initialState = {
   error: null,
 };
 
-// Thunk for create module
+// Create a new module in a course
 export const createModule = createAsyncThunk(
   "module/createModule",
   async ({ courseId, title, description, position }) => {
@@ -21,7 +21,7 @@ export const createModule = createAsyncThunk(
   },
 );
 
-// Thunk for fetch course modules
+// Get all modules for a course
 export const fetchCourseModules = createAsyncThunk(
   "module/fetchCourseModules",
   async ({ courseId }) => {
@@ -29,7 +29,7 @@ export const fetchCourseModules = createAsyncThunk(
   },
 );
 
-// Thunk for fetch a module by ID
+// Get a single module by ID
 export const fetchModuleById = createAsyncThunk(
   "module/fetchModuleById",
   async ({ moduleId }) => {
@@ -37,7 +37,7 @@ export const fetchModuleById = createAsyncThunk(
   },
 );
 
-// Thunk for update module
+// Update module info (title, description)
 export const updateModule = createAsyncThunk(
   "module/updateModule",
   async ({ moduleId, moduleData }) => {
@@ -45,7 +45,7 @@ export const updateModule = createAsyncThunk(
   },
 );
 
-// Thunk for delete module
+// Delete a module (lessons are deleted by the database)
 export const deleteModule = createAsyncThunk(
   "module/deleteModule",
   async ({ moduleId }) => {
@@ -54,7 +54,7 @@ export const deleteModule = createAsyncThunk(
   },
 );
 
-// Thunk for updatePosition
+// Save new module order after drag and drop
 export const updateModulePositions = createAsyncThunk(
   "module/updateModulePositions",
   async ({ reorderedModules }) => {
@@ -67,7 +67,6 @@ const moduleSlice = createSlice({
   name: "module",
   initialState,
   extraReducers: (builder) => {
-    // create module
     builder
       .addCase(createModule.pending, (state) => {
         state.loading = true;
@@ -85,7 +84,6 @@ const moduleSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // get modules of a course
     builder
       .addCase(fetchCourseModules.pending, (state) => {
         state.loading = true;
@@ -103,7 +101,6 @@ const moduleSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // get a single module by ID
     builder
       .addCase(fetchModuleById.pending, (state) => {
         state.loading = true;
@@ -120,7 +117,6 @@ const moduleSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // update module
     builder
       .addCase(updateModule.pending, (state) => {
         state.loading = true;
@@ -131,13 +127,10 @@ const moduleSlice = createSlice({
         const index = state.modules.findIndex(
           (module) => module.id === action.payload.id,
         );
-
         if (index !== -1) {
           state.modules[index] = action.payload;
         }
-
         state.modules.sort((a, b) => a.position - b.position);
-
         if (state.selectedModule?.id === action.payload.id) {
           state.selectedModule = action.payload;
         }
@@ -147,7 +140,6 @@ const moduleSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // delete module
     builder
       .addCase(deleteModule.pending, (state) => {
         state.loading = true;
@@ -158,7 +150,6 @@ const moduleSlice = createSlice({
         state.modules = state.modules.filter(
           (module) => module.id !== action.payload,
         );
-
         if (state.selectedModule?.id === action.payload) {
           state.selectedModule = null;
         }
@@ -168,7 +159,6 @@ const moduleSlice = createSlice({
         state.error = action.error?.message;
       });
 
-    // update module position
     builder
       .addCase(updateModulePositions.pending, (state) => {
         state.loading = true;
@@ -176,8 +166,7 @@ const moduleSlice = createSlice({
       })
       .addCase(updateModulePositions.fulfilled, (state, action) => {
         state.loading = false;
-        const reordered = action.payload;
-        reordered.forEach(({ id, position }) => {
+        action.payload.forEach(({ id, position }) => {
           const mod = state.modules.find((m) => m.id === id);
           if (mod) mod.position = position;
         });

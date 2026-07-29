@@ -28,7 +28,7 @@ import {
 } from "./components/index.js";
 import AuthInitializer from "./features/auth/AuthInitializer.js";
 
-// Define the routes for the application using React Router
+// All routes for the app
 const route = createBrowserRouter([
   {
     path: "/",
@@ -94,7 +94,7 @@ const route = createBrowserRouter([
     ],
   },
 
-  // Dashboard Routes
+  // Dashboard routes (need to be logged in)
   {
     path: "dashboard",
     element: (
@@ -177,7 +177,7 @@ const route = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  // Wrap the App component with the Redux Provider and pass the store as a prop
+  // Wrap app with Redux provider
   <Provider store={store}>
     <AuthInitializer />
     <RouterProvider router={route} />

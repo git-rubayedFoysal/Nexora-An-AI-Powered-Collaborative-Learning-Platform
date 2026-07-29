@@ -1,3 +1,4 @@
+// Shows a friendly error page for broken routes (404, 403, 500)
 import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router";
 import { Logo } from "../components/index";
 
@@ -5,6 +6,7 @@ function ErrorPage() {
   const error = useRouteError?.();
   const navigate = useNavigate();
 
+  // Pick status, title, message based on error type
   let status = 404;
   let title = "Page Not Found";
   let message = "The page you are looking for doesn't exist.";
@@ -37,12 +39,12 @@ function ErrorPage() {
 
   return (
     <div className="min-h-screen bg-navy flex flex-col">
-      {/* Header */}
+      {/* Top bar */}
       <header className="glass border-b border-white/6 h-17 flex items-center px-6">
         <Logo />
       </header>
 
-      {/* Content */}
+      {/* Error message */}
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="glass border border-white/6 rounded-3xl p-10 w-full max-w-md text-center">
           <h1 className="text-7xl font-bold text-violet-light mb-4">

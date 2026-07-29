@@ -1,3 +1,4 @@
+// Teacher dashboard home — stats, grade center, course performance, rankings
 import { getGreeting } from "../../../utils/greeting";
 import { fetchCourseStats } from "../../../features/course/courseSlice";
 import { useDispatch, useSelector } from "react-redux";

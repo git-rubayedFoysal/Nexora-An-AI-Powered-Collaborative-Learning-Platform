@@ -1,6 +1,7 @@
-// Create lesson — thin wrapper around LessonModal
+// Edit lesson — thin wrapper around LessonModal
 import { LessonModal } from "../index";
-function CreateLessonModal({ open, onClose, moduleId, lesson = null }) {
+
+function EditLessonModal({ open, onClose, moduleId, lesson }) {
   return (
     <LessonModal
       open={open}
@@ -11,4 +12,4 @@ function CreateLessonModal({ open, onClose, moduleId, lesson = null }) {
   );
 }
 
-export default CreateLessonModal;
+export default EditLessonModal;

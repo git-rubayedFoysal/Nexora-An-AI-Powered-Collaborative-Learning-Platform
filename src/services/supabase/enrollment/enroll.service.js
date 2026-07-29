@@ -1,25 +1,10 @@
+// Enrollment service — Supabase operations for enrollments table
 import { supabase } from "../supabaseClient";
 import authService from "../auth/auth.service";
 import { COURSE_PAGE_SIZE } from "../../../constants/pagination";
-
-/**
- * EnrollService
- *
- * Handles all Supabase operations for the enrollments table.
- * Each method gets the current authenticated user and operates on their behalf.
- *
- * Key behaviors:
- *  - enrollCourse checks for existing enrollment before inserting (prevents duplicates)
- *  - getMyEnrollments deduplicates by course_id as a safety net against stale data
- *  - getEnrollment uses maybeSingle() to return null instead of error when not found
- */
 class EnrollService {
   /**
-   * Enroll the current user in a course.
-   * 1. Gets the authenticated user
-   * 2. Checks if already enrolled (prevents duplicate rows)
-   * 3. Inserts the enrollment row
-   * 4. Returns the raw enrollment data (no courses join)
+   * Enroll in a course — checks for duplicates, then inserts.
    */
   async enrollCourse(courseId) {
     const user = await authService.getUser();
@@ -56,8 +41,7 @@ class EnrollService {
   }
 
   /**
-   * Remove the current user's enrollment from a course.
-   * Deletes the row matching both student_id and course_id.
+   * Unenroll from a course — deletes the enrollment row.
    */
   async unenrollCourse(courseId) {
     const user = await authService.getUser();
@@ -77,9 +61,7 @@ class EnrollService {
   }
 
   /**
-   * Get the current user's enrollment for a specific course.
-   * Returns the enrollment row if found, null if not enrolled.
-   * Uses maybeSingle() to avoid 406 errors when no row exists.
+   * Get enrollment for a specific course — returns null if not enrolled.
    */
   async getEnrollment(courseId) {
     const user = await authService.getUser();
@@ -101,16 +83,8 @@ class EnrollService {
   }
 
   /**
-   * Get all courses the current student is enrolled in (paginated).
-   *
-   * Joins:
-   *  - courses: full course data (title, thumbnail, price, etc.)
-   *  - users: instructor info (full_name, email, role)
-   *
-   * Deduplication: filters by unique course_id to guard against
-   * duplicate enrollment rows (stale data safety net).
-   *
-   * Returns: { courses: [...], total: number }
+   * Get student's enrolled courses (paginated, deduplicated).
+   * Joins course data and instructor info.
    */
   async getMyEnrollments({ page = 1 }) {
     const user = await authService.getUser();
@@ -119,7 +93,7 @@ class EnrollService {
       throw new Error("User not found.");
     }
 
-    // Build query with courses + instructor joins
+    // Build query with course and instructor joins
     let query = supabase
       .from("enrollments")
       .select(
@@ -163,9 +137,7 @@ class EnrollService {
   }
 
   /**
-   * Get all students enrolled in a specific course (teacher/admin view).
-   * Joins user data (full_name, email, role) for each enrollment.
-   * Ordered by most recently enrolled first.
+   * Get all students enrolled in a course (teacher/admin view).
    */
   async getCourseEnrollments(courseId) {
     const { data, error } = await supabase
@@ -189,10 +161,7 @@ class EnrollService {
   }
 
   /**
-   * Update the progress and status for the current user's enrollment.
-   * Automatically sets status to "completed" when progress >= 100,
-   * otherwise "active".
-   * Returns the updated enrollment row.
+   * Update progress — auto-sets "completed" when >= 100.
    */
   async updateProgress(courseId, progress) {
     const user = await authService.getUser();

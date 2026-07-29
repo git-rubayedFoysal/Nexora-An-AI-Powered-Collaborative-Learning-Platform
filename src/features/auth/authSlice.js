@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "../../services/supabase/auth/auth.service";
 
+// Fetch user counts for the admin dashboard
 export const fetchUserStats = createAsyncThunk(
   "auth/fetchUserStats",
   async () => {
@@ -8,12 +9,10 @@ export const fetchUserStats = createAsyncThunk(
   },
 );
 
-// Initial state for the auth slice
 const initialState = {
-  userData: null, // user data object (e.g., email, id, etc.)
-  isAuthenticated: false, // is user already login?
-  isLoading: true, // is authentication process loading?
-
+  userData: null,
+  isAuthenticated: false,
+  isLoading: true,
   totalUsers: 0,
   totalStudents: 0,
   totalTeachers: 0,
@@ -21,22 +20,22 @@ const initialState = {
 };
 
 const authSlice = createSlice({
-  name: "auth", // name of the slice
-  initialState, // initial state for the slice
-  // Reducers for handling authentication actions
+  name: "auth",
+  initialState,
   reducers: {
-    // Action to log in the user and set the user data
+    // Save user data after login
     login: (state, action) => {
       state.isAuthenticated = true;
       state.userData = action.payload;
       state.isLoading = false;
     },
-    // Action to log out the user and clear the user data
+    // Clear user data on logout
     logout: (state) => {
       state.isAuthenticated = false;
       state.userData = null;
       state.isLoading = false;
     },
+    // Show or hide the loading spinner
     setLoading: (state, action) => {
       state.isLoading = action.payload;
     },

@@ -1,27 +1,12 @@
+// Guest header controls — login, get started, and mobile menu toggle
 import { useNavigate } from "react-router";
 import { Button } from "../index";
-
-/**
- * GuestActions
- * ------------
- * Right-side controls rendered when the user is **not** logged in.
- *
- * Contains:
- *  - A compact search bar (hidden on small screens, visible md+)
- *  - "Login" ghost button  (hidden on xs screens)
- *  - "Get Started" CTA button (always visible)
- *  - Hamburger / close icon to toggle the mobile menu
- *
- * Props:
- *  - mobileOpen   : boolean  — current mobile menu state (open/closed)
- *  - onMenuToggle : () => void — callback to flip the mobile menu
- */
 function GuestActions({ mobileOpen, onMenuToggle }) {
   const navigate = useNavigate();
 
   return (
     <div className="flex items-center gap-3">
-      {/* ── Login ghost button ── */}
+      {/* Login button (desktop only) */}
       <Button
         type="button"
         onClick={() => navigate("/login")}
@@ -33,7 +18,7 @@ function GuestActions({ mobileOpen, onMenuToggle }) {
         Login
       </Button>
 
-      {/* ── Get Started gradient CTA ── */}
+      {/* Get Started button (desktop only) */}
       <Button
         type="button"
         onClick={() => navigate("/signup")}
@@ -61,7 +46,7 @@ function GuestActions({ mobileOpen, onMenuToggle }) {
         </svg>
       </Button>
 
-      {/* ── Hamburger / close toggle (mobile only, lg:hidden) ── */}
+      {/* Hamburger menu toggle (mobile only) */}
       <Button
         type="button"
         onClick={onMenuToggle}
