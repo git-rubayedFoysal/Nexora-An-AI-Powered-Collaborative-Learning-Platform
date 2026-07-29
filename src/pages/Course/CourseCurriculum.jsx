@@ -6,14 +6,14 @@ import {
 } from "../../features/module/moduleSlice";
 import { DeleteConfirmModal } from "../../components";
 
-function CourseCurriculum({ courseId, handleModal }) {
+function CourseCurriculum({ courseId }) {
   const dispatch = useDispatch();
   const [deleteTarget, setDeleteTarget] = useState(null);
   const { userData } = useSelector((s) => s.auth);
   const { modules } = useSelector((s) => s.module);
 
-  const isTeacher = userData?.role?.toLowerCase() === "teacher";
-  const isAdmin = userData?.role?.toLowerCase() === "admin";
+  // const isTeacher = userData?.role?.toLowerCase() === "teacher";
+  // const isAdmin = userData?.role?.toLowerCase() === "admin";
   const isStudent = userData?.role?.toLowerCase() === "student";
   const isEmpty = modules.length === 0;
 
@@ -39,23 +39,7 @@ function CourseCurriculum({ courseId, handleModal }) {
             Lessons and modules will appear here once the instructor publishes
             course content.
           </p>
-
-          {(isTeacher || isAdmin) && (
-            <button
-              className="btn-primary py-2.5 px-5 rounded-xl text-xs font-semibold text-white"
-              onClick={handleModal}
-            >
-              + Create First Module
-            </button>
-          )}
         </div>
-        <DeleteConfirmModal
-          isOpen={Boolean(deleteTarget)}
-          onConfirm={handleDelete}
-          onClose={() => setDeleteTarget(null)}
-          itemName={deleteTarget?.title}
-          feature="Module"
-        />
       </>
     );
   }
@@ -63,7 +47,7 @@ function CourseCurriculum({ courseId, handleModal }) {
   return (
     <>
       <div className="space-y-2">
-        {modules.map((mod, idx) => (
+        {modules.map((mod) => (
           <div
             key={mod.id}
             className="group flex items-center justify-between gap-3 px-4 py-3
