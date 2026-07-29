@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Button } from "./index";
 /**
  * DeleteConfirmModal
@@ -15,12 +16,13 @@ function DeleteConfirmModal({
   onConfirm,
   itemName = "",
   loading = false,
+  feature = "course",
 }) {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-300 flex items-center justify-center p-4"
+      className="fixed inset-0 z-200 flex items-center justify-center p-4"
       style={{ background: "rgba(8,12,26,0.8)", backdropFilter: "blur(6px)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -55,7 +57,7 @@ function DeleteConfirmModal({
           className="text-base font-bold text-white mb-2"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Delete Course?
+          Delete {feature}?
         </h2>
         <p className="text-sm text-slate leading-relaxed mb-1">
           Are you sure you want to delete{" "}
@@ -89,7 +91,8 @@ function DeleteConfirmModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

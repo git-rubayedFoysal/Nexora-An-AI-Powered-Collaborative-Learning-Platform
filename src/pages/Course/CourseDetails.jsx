@@ -7,7 +7,11 @@ import {
   fetchEnrollment,
 } from "../../features/enroll/enrollSlice";
 import courseStorage from "../../services/supabase/course/course.storage";
-import { LoadingState } from "../../components";
+import {
+  LoadingState,
+  CreateModuleModal,
+  CourseCurriculum,
+} from "../../components";
 
 function InfoChip({ icon, label }) {
   return (
@@ -67,6 +71,19 @@ function CourseDetails() {
   useEffect(() => {
     dispatch(fetchCourseEnrollments(courseId));
   }, [dispatch, courseId]);
+
+  // Course Carriculum
+  const [isOpen, setIsOpen] = useState(false);
+  // set scroll disable when open modal
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "auto";
+
+    return () => (document.body.style.overflow = "auto");
+  }, [isOpen]);
+
+  function handleModal() {
+    setIsOpen((prev) => !prev);
+  }
 
   function switchTab(id) {
     setActiveTab(id);
@@ -252,22 +269,39 @@ function CourseDetails() {
 
           {/* ── Tab: Curriculum ── */}
           {activeTab === "curriculum" && (
-            <Section title="Course Curriculum">
-              <div
-                className="flex flex-col items-center justify-center py-10 gap-3
-                              rounded-xl border border-dashed border-border-2 bg-glass"
-              >
-                <span className="text-3xl">📋</span>
-                <p className="text-sm font-semibold text-white">
-                  Curriculum coming soon
-                </p>
-                <p className="text-xs text-slate-dark text-center max-w-xs">
-                  Lessons and modules will appear here once the instructor
-                  publishes course content.
-                </p>
+            <div className="glass rounded-2xl border border-border p-5 sm:p-6">
+              <div className="mb-4 flex justify-between items-center">
+                <h2 className="text-sm font-bold text-white font-display">
+                  Course Curriculum
+                </h2>
+                {!isStudent && (
+                  <button
+                    className="btn-secondary border py-2 px-3 rounded-lg text-xs font-semibold text-white flex gap-1 justify-center items-center"
+                    onClick={handleModal}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      height="20px"
+                      viewBox="0 -960 960 960"
+                      width="20px"
+                      fill="#e3e3e3"
+                    >
+                      <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
+                    </svg>{" "}
+                    Create Module
+                  </button>
+                )}
               </div>
-            </Section>
+              <CourseCurriculum courseId={courseId} handleModal={handleModal} />
+            </div>
           )}
+
+          {/* Create Module Modal */}
+          <CreateModuleModal
+            open={isOpen}
+            onClose={() => setIsOpen(false)}
+            courseId={courseId}
+          />
 
           {/* ── Tab: Enrolled Students (teacher & admin only) ── */}
           {activeTab === "enrolled" && showEnrolledTab && (

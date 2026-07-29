@@ -29,6 +29,8 @@ import ManageCourses from "./Dashboard/Admin/ManageCourses";
 import EmptyState from "./EmptyState";
 import LoadingState from "./LoadingState";
 import SearchBar from "./SearchBar";
+import CreateModuleModal from "./Course/CreateModuleModal";
+import CourseCurriculum from "../pages/Course/CourseCurriculum";
 
 export {
   Input,
@@ -62,4 +64,6 @@ export {
   EmptyState,
   LoadingState,
   SearchBar,
+  CreateModuleModal,
+  CourseCurriculum,
 };
