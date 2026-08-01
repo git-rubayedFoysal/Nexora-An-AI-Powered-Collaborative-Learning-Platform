@@ -17,6 +17,7 @@ import {
   CourseDetails,
   Checkout,
   EnrollmentSuccess,
+  LearningPage,
 } from "./pages/index.js";
 import {
   DashboardHome,
@@ -87,6 +88,16 @@ const route = createBrowserRouter([
           <ProtectedRoute requireAuth>
             <RoleRoute allowedRoles={["student"]}>
               <EnrollmentSuccess />,
+            </RoleRoute>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "my-learning/:courseId",
+        element: (
+          <ProtectedRoute requireAuth>
+            <RoleRoute allowedRoles={["student"]}>
+              <LearningPage />
             </RoleRoute>
           </ProtectedRoute>
         ),

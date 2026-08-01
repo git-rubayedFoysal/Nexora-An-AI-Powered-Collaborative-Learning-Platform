@@ -89,7 +89,7 @@ function MyLearning() {
                 }}
                 variant="student"
                 onContinue={() =>
-                  alert("🚧 Course lessons will be available soon.")
+                  navigate(`/my-learning/${enrollment.course_id}`)
                 }
               />
             ))}

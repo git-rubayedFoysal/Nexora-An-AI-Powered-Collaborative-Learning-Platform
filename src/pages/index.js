@@ -11,6 +11,7 @@ import PublicCourses from "./Course/PublicCourses";
 import CourseDetails from "./Course/CourseDetails";
 import Checkout from "./Course/Checkout";
 import EnrollmentSuccess from "./Course/EnrollmentSuccess";
+import LearningPage from "./LearningPage";
 
 export {
   Home,
@@ -25,4 +26,5 @@ export {
   CourseDetails,
   Checkout,
   EnrollmentSuccess,
+  LearningPage,
 };
