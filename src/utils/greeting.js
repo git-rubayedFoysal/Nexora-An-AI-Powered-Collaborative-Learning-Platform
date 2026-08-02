@@ -1,3 +1,4 @@
+// Returns "Morning", "Afternoon", "Evening", or "Night"
 export const getGreeting = () => {
   const hour = new Date().getHours();
 

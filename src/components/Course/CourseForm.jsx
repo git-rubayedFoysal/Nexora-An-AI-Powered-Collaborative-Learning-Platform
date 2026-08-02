@@ -1,3 +1,4 @@
+// Course create/edit form — title, description, category, thumbnail upload
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, Select, Textarea } from "../index";
@@ -6,12 +7,7 @@ import courseStorage from "../../services/supabase/course/course.storage";
 const COURSE_LEVELS = ["Beginner", "Intermediate", "Advanced"];
 const COURSE_STATUS_CREATE = ["draft", "published"];
 const COURSE_STATUS_EDIT = ["draft", "published", "archived"];
-/**
- * CourseForm — aligned to index.css tokens
- * Logic, props, validation unchanged.
- * Now uses: .glass, .glass2, .btn-primary, .btn-ghost, .btn-secondary,
- *           .prog/.prog-fill, color tokens (coral-dim, amber-dim, border…)
- */
+// Status options differ for create vs edit mode
 function CourseForm({
   initialData = {},
   loading = false,
@@ -42,7 +38,7 @@ function CourseForm({
     },
   });
 
-  /* ── Handlers */
+  /* Handle thumbnail file selection */
   const handleThumbnailChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -55,6 +51,7 @@ function CourseForm({
     setPreview(URL.createObjectURL(file));
   };
 
+  /* Validate and submit form */
   const submitHandler = async (data) => {
     setSubmitError("");
     if (!thumbnailFile && !initialData?.thumbnail_url) {
@@ -68,6 +65,7 @@ function CourseForm({
     }
   };
 
+  // Sync form with initial data on open
   useEffect(() => {
     reset({
       title: initialData?.title || "",
@@ -88,6 +86,7 @@ function CourseForm({
     }
   }, [initialData, reset, isEditing]);
 
+  // Clean up blob URL on unmount
   useEffect(() => {
     return () => {
       if (preview && preview.startsWith("blob:")) {

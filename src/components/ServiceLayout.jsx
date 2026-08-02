@@ -1,6 +1,7 @@
 import { Navigate } from "react-router";
 import { useSelector } from "react-redux";
 
+// Only allow users with the right role to see the page
 function RoleRoute({ children, allowedRoles = [] }) {
   const { userData } = useSelector((state) => state.auth);
 

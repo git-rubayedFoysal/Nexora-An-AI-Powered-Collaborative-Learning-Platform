@@ -1,3 +1,4 @@
+// Teacher's course list — search, pagination, create/edit/delete
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";

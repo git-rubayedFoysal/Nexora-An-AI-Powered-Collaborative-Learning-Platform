@@ -1,13 +1,13 @@
 import { supabase } from "../supabaseClient";
 
+// All auth-related operations (sign up, sign in, sign out, user info)
 class AuthService {
-  // register a new user with email and password
+  // Create a new account with email and password
   async signUp(email, password, fullName, role) {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        // Pass additional user metadata (full name and role) during sign-up
         options: {
           emailRedirectTo: `${window.location.origin}/login`,
           data: {
@@ -16,7 +16,6 @@ class AuthService {
           },
         },
       });
-
       if (error) throw error;
       return data;
     } catch (error) {
@@ -25,7 +24,7 @@ class AuthService {
     }
   }
 
-  // sign in an existing user with email and password
+  // Log in with email and password
   async signIn(email, password) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -40,7 +39,7 @@ class AuthService {
     }
   }
 
-  // sign out the current user
+  // Log out the current user
   async signOut() {
     try {
       const { error } = await supabase.auth.signOut();
@@ -52,7 +51,7 @@ class AuthService {
     }
   }
 
-  // Get the current authenticated user's session
+  // Get the current session (user + tokens)
   async getSession() {
     try {
       const { data, error } = await supabase.auth.getSession();
@@ -64,7 +63,7 @@ class AuthService {
     }
   }
 
-  // Get the current authenticated user's details
+  // Get the currently logged in user
   async getUser() {
     try {
       const { data, error } = await supabase.auth.getUser();
@@ -75,15 +74,13 @@ class AuthService {
       return null;
     }
   }
-  // Get the current authenticated user's details from the "users" table
+
+  // Get the full user profile from the users table
   async getCurrentUserDetails() {
     try {
       const { data: userData, error: userError } =
         await supabase.auth.getUser();
-
-      if (userError || !userData?.user) {
-        return null;
-      }
+      if (userError || !userData?.user) return null;
 
       const userId = userData.user.id;
 
@@ -104,16 +101,16 @@ class AuthService {
     }
   }
 
-  // Listen for authentication state changes (e.g., sign in, sign out)
+  // Listen for login/logout events
   onAuthStateChange(callback) {
     return supabase.auth.onAuthStateChange((event, session) => {
       callback(event, session);
     });
   }
-  // Get user statistics (total users, students, teachers, admins)
+
+  // Get total user counts by role for the admin dashboard
   async getUserStats() {
     const { data, error } = await supabase.from("users").select("role");
-
     if (error) throw error;
 
     return {

@@ -1,3 +1,4 @@
+// Call-to-action section — encourages signup
 import { Link } from "react-router";
 
 function CTASection() {

@@ -1,3 +1,4 @@
+// Landing page hero — headline, CTAs, social proof, and illustration
 import { Link } from "react-router";
 import imgLink from "../../assets/Online-learning-amico.svg";
 

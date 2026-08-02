@@ -1,3 +1,4 @@
+// Site footer — logo, link columns, social icons, copyright
 import { Logo } from "../index";
 
 function Footer() {

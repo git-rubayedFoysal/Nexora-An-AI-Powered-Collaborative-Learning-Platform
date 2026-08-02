@@ -1,3 +1,4 @@
+// Admin course management — view, edit, delete any course
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";

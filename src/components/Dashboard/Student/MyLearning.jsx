@@ -1,3 +1,4 @@
+// Student's enrolled courses list — pagination, explore more button
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { fetchMyEnrollments } from "../../../features/enroll/enrollSlice";
@@ -88,7 +89,7 @@ function MyLearning() {
                 }}
                 variant="student"
                 onContinue={() =>
-                  alert("🚧 Course lessons will be available soon.")
+                  navigate(`/my-learning/${enrollment.course_id}`)
                 }
               />
             ))}

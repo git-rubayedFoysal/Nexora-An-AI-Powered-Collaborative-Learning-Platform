@@ -8,9 +8,12 @@ import {
   setLoading,
 } from "./authSlice";
 
+// Runs once when the app loads to check if the user is logged in
+// Also listens for login/logout events to keep Redux in sync
 function AuthInitializer() {
   const dispatch = useDispatch();
-  // Check for existing session on app load and set up auth state accordingly
+
+  // Check for an existing session when the app first loads
   useEffect(() => {
     const initAuth = async () => {
       dispatch(setLoading(true));
@@ -23,6 +26,7 @@ function AuthInitializer() {
           return;
         }
 
+        // Get the user's full profile from the users table
         const { data: profile, error } = await supabase
           .from("users")
           .select("*")
@@ -30,7 +34,6 @@ function AuthInitializer() {
           .single();
 
         if (error) throw error;
-        // console.log(profile);
 
         dispatch(storeLogin(profile));
       } catch (error) {
@@ -43,7 +46,8 @@ function AuthInitializer() {
 
     initAuth();
   }, [dispatch]);
-  // Set up a listener for auth state changes (e.g., sign in, sign out) to keep Redux store in sync
+
+  // Listen for login, logout, and token refresh events
   useEffect(() => {
     const {
       data: { subscription },
@@ -52,6 +56,7 @@ function AuthInitializer() {
         dispatch(storeLogout());
         return;
       }
+
       const { data: profile, error } = await supabase
         .from("users")
         .select("*")
@@ -68,6 +73,7 @@ function AuthInitializer() {
 
     return () => subscription.unsubscribe();
   }, [dispatch]);
+
   return null;
 }
 

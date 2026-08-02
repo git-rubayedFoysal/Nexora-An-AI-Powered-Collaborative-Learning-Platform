@@ -1,3 +1,4 @@
+// Home page — shows all landing page sections
 import {
   HeroSection,
   StatsSection,

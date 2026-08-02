@@ -1,3 +1,4 @@
+// Role-based sidebar navigation — different menus for student/teacher/admin
 import { useMemo } from "react";
 import { NavLink } from "react-router";
 import { useDispatch } from "react-redux";
@@ -5,9 +6,7 @@ import { useNavigate } from "react-router";
 import { logout as storeLogout } from "../../features/auth/authSlice";
 import authService from "../../services/supabase/auth/auth.service";
 
-/* ─────────────────────────────────────────────
-   NAV CONFIG — one source of truth per role
-───────────────────────────────────────────── */
+// Menu config — one source of truth per role
 
 const MENUS = {
   student: {
@@ -170,35 +169,21 @@ const MENUS = {
 };
 
 /**
- * Sidebar
- * -------
- * Role-based sidebar for Nexora LMS.
- *
- * FIX: NavLink className now has three states:
- *   1. isActive  → accentClass  (bg + text color + left border)
- *   2. isPending → subtle pulse (optional, good for slow loaders)
- *   3. default   → text-slate + hover only — NO background
- *
- * The key insight: inactive items must have NO background class at all.
- * Previously "text-slate hover:text-white hover:bg-white/6" was correct
- * but the accentClass was also applying to parent routes because Dashboard
- * path="/dashboard" matched every /dashboard/* route.
- * Fixed by adding end={true} to the Dashboard item in every role config.
- *
- * Props:
- *  - role    : 'student' | 'teacher' | 'admin'
- *  - isOpen  : boolean        — mobile slide-in state
- *  - onClose : () => void     — collapse sidebar on mobile nav / backdrop tap
+ * Sidebar — role-based navigation with mobile slide-in.
+ * Active item gets accent color + left border.
+ * Inactive items have no background, only hover effect.
  */
 function Sidebar({ role = "student", isOpen = false, onClose }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Get menu config for current role
   const config = useMemo(
     () => MENUS[role?.toLowerCase()] ?? MENUS.student,
     [role],
   );
 
+  /* Sign out handler */
   async function handleLogout() {
     await authService.signOut();
     dispatch(storeLogout());

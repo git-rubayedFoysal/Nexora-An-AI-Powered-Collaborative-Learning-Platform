@@ -1,26 +1,20 @@
+import { createPortal } from "react-dom";
 import { Button } from "./index";
-/**
- * DeleteConfirmModal
- *
- * Props:
- *  - isOpen    : boolean
- *  - onClose   : () => void
- *  - onConfirm : () => void
- *  - itemName  : string
- *  - loading   : boolean
- */
+
+// Pop-up asking "Are you sure you want to delete this?"
 function DeleteConfirmModal({
   isOpen,
   onClose,
   onConfirm,
   itemName = "",
   loading = false,
+  feature = "course",
 }) {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-300 flex items-center justify-center p-4"
+      className="fixed inset-0 z-200 flex items-center justify-center p-4"
       style={{ background: "rgba(8,12,26,0.8)", backdropFilter: "blur(6px)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -30,7 +24,7 @@ function DeleteConfirmModal({
         className="glass2 w-full max-w-sm rounded-2xl border border-white/8
                       shadow-[0_24px_60px_rgba(0,0,0,0.5)] p-7 text-center"
       >
-        {/* Icon */}
+        {/* Trash icon */}
         <div
           className="inline-flex items-center justify-center w-12 h-12
                         rounded-xl bg-coral-dim border border-coral/25 mb-5"
@@ -50,12 +44,11 @@ function DeleteConfirmModal({
           </svg>
         </div>
 
-        {/* Text */}
         <h2
           className="text-base font-bold text-white mb-2"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Delete Course?
+          Delete {feature}?
         </h2>
         <p className="text-sm text-slate leading-relaxed mb-1">
           Are you sure you want to delete{" "}
@@ -65,7 +58,6 @@ function DeleteConfirmModal({
           This action cannot be undone.
         </p>
 
-        {/* Buttons */}
         <div className="flex gap-3">
           <Button
             onClick={onClose}
@@ -89,7 +81,8 @@ function DeleteConfirmModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

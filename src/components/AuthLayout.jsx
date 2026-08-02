@@ -2,6 +2,8 @@ import { Navigate } from "react-router";
 import { useSelector } from "react-redux";
 import LoadingState from "./LoadingState";
 
+// Blocks unauthenticated users (redirects to /login)
+// Also redirects logged-in users away from login/signup pages
 function ProtectedRoute({ children, requireAuth = true }) {
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
 

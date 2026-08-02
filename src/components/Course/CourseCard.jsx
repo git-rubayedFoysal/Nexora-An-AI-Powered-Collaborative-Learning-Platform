@@ -1,7 +1,9 @@
+// Course card — shows thumbnail, info, and actions based on user role
 import { Button } from "../index";
 import courseStorage from "../../services/supabase/course/course.storage";
+import formatDuration from "../../utils/formatDuration";
 
-/* ── Status chip config — one source of truth ── */
+// Status badge styles for teacher/admin variants
 const STATUS_CONFIG = {
   published: {
     label: "Published",
@@ -30,13 +32,14 @@ function CourseCard({
 }) {
   const statusCfg = STATUS_CONFIG[course.status?.toLowerCase()] ?? null;
 
+  // Get thumbnail URL or fallback to placeholder
   const publicUrl = course.thumbnail_url
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
     : "/placeholder-course.png";
 
   return (
     <div className="course-card glass rounded-2xl overflow-hidden border border-border flex flex-col">
-      {/* ── Thumbnail ── */}
+      {/* Thumbnail image */}
       <div className="relative h-48 overflow-hidden">
         <img
           src={publicUrl}
@@ -73,7 +76,7 @@ function CourseCard({
         )}
       </div>
 
-      {/* ── Body ── */}
+      {/* Card body */}
       <div className="flex flex-col flex-1 p-5">
         {/* Title */}
         <h3
@@ -123,7 +126,7 @@ function CourseCard({
           </span>
           <span className="w-1 h-1 rounded-full bg-border" />
           <span className="text-[11px] text-slate font-mono">
-            {course.duration ? `${course.duration} hrs` : "Not set"}
+            {course.duration ? `${formatDuration(course.duration)}` : "Not set"}
           </span>
           <span className="w-1 h-1 rounded-full bg-border" />
           <span className="tag bg-teal-dim text-teal border border-teal/20 font-mono">
@@ -161,7 +164,7 @@ function CourseCard({
           </div>
         )}
 
-        {/* ── Actions ── */}
+        {/* Action buttons */}
         <div className="mt-auto pt-5">
           {variant === "student" && (
             <Button
@@ -172,7 +175,7 @@ function CourseCard({
                          hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(15,191,138,.4)]
                          transition-all duration-200"
             >
-              Continue Learning
+              {course.progress === 0 ? "Start Learning" : "Continue Learning"}
             </Button>
           )}
 

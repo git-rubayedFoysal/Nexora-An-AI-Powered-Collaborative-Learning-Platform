@@ -274,7 +274,7 @@ button {
 
 .progress-bar,
 .prog {
-  height: 4px;
+  height: 7px;
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -317,6 +317,15 @@ button {
 ::-webkit-scrollbar-thumb {
   background: var(--color-violet);
   border-radius: 3px;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* =========================================================

@@ -1,3 +1,4 @@
+// Dashboard layout — sidebar on the left, main content on the right
 import { useState } from "react";
 import { Outlet } from "react-router";
 import { useSelector } from "react-redux";
@@ -16,14 +17,14 @@ function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-navy text-white flex">
-      {/* Sidebar */}
+      {/* Sidebar navigation */}
       <Sidebar
         role={role}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main Content */}
+      {/* Main area */}
       <div className="flex-1 lg:ml-55">
         <DashboardHeader mobileOpen={sidebarOpen} onMenuToggle={onMenuToggle} />
 

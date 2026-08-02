@@ -1,9 +1,11 @@
+// Signup page — shows the registration form with a side illustration
 import { Signup as SignupComponent, Logo } from "../components/index";
 import signupImg from "../assets/Sign up-bro.svg";
 
 function Signup() {
   return (
     <div className="flex gap-2 pt-2 font-[Outfit] items-center">
+      {/* Illustration on the left (hidden on mobile) */}
       <div className="md:flex hidden justify-center items-center w-full auth-page">
         <img
           src={signupImg}
@@ -11,6 +13,7 @@ function Signup() {
           className="w-full max-w-lg object-contain"
         />
       </div>
+      {/* Signup form on the right */}
       <div className="page active auth-page w-full flex">
         <div className="fixed inset-0 bg-mesh pointer-events-none z-0"></div>
         <div
@@ -21,7 +24,6 @@ function Signup() {
           }}
         ></div>
         <div className="relative z-10 w-full max-w-md">
-          {/* logo */}
           <div className="flex justify-center mb-8">
             <div className="flex items-center gap-2.5">
               <Logo width="100%" />

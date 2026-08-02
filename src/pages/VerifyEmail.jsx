@@ -1,3 +1,4 @@
+// Shows a "check your email" message after signup
 import { Link } from "react-router";
 import { useSelector } from "react-redux";
 import { Logo } from "../components/index";
@@ -8,17 +9,17 @@ function VerifyEmail() {
 
   return (
     <div className="min-h-screen bg-navy flex flex-col">
-      {/* Header */}
+      {/* Top bar with logo */}
       <header className="glass border-b border-white/6 h-17 flex items-center px-6">
         <Link to="/" className="flex items-center gap-2.5">
           <Logo />
         </Link>
       </header>
 
-      {/* Content */}
+      {/* Main content */}
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="glass w-full max-w-md rounded-3xl border border-white/6 p-10 text-center shadow-[0_32px_80px_rgba(0,0,0,.45)]">
-          {/* Icon */}
+          {/* Email icon */}
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-teal/10">
             <span className="text-4xl">📧</span>
           </div>

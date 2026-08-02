@@ -1,3 +1,4 @@
+// Stats cards — shows platform metrics (learners, courses, rating)
 function StatsSection() {
   const statsData = [
     {

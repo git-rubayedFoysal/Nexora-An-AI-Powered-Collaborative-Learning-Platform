@@ -1,3 +1,6 @@
+/**
+ * A simple button with padding, rounded corners, and disabled state.
+ */
 function Button({ type = "button", children, className = "", ...props }) {
   return (
     <button

@@ -1,14 +1,9 @@
+// Avatar button with slide-down profile menu for logged-in users
 import { useRef, useEffect } from "react";
 import { Link } from "react-router";
 import { Button } from "../index";
 
-/**
- * DROPDOWN_ITEMS
- * --------------
- * Static config for the three navigation links inside the dropdown panel.
- * Using JSX for icon paths keeps them co-located with their menu entry
- * rather than scattered as separate SVG files.
- */
+// Menu items shown in the dropdown
 const DROPDOWN_ITEMS = [
   {
     label: "Profile",
@@ -87,7 +82,7 @@ function AvatarDropdown({
 }) {
   const avaterRef = useRef(null);
 
-  /* ── Close the panel when the user clicks anywhere outside it ── */
+/* Close dropdown when clicking outside */
   useEffect(() => {
     function handleOutsideClick(e) {
       if (avaterRef.current && !avaterRef.current.contains(e.target)) {
@@ -100,7 +95,7 @@ function AvatarDropdown({
 
   return (
     <div className="relative" ref={avaterRef}>
-      {/* ── Avatar trigger button ── */}
+      {/* Avatar trigger button */}
       <Button
         type="button"
         onClick={onToggle}
@@ -142,7 +137,7 @@ function AvatarDropdown({
         </svg>
       </Button>
 
-      {/* ── Dropdown panel (conditionally rendered) ── */}
+      {/* Dropdown panel (shown when open) */}
       {isOpen && (
         <div
           className="absolute right-0 top-[calc(100%+8px)] w-56 rounded-2xl py-1.5 z-50
@@ -183,7 +178,7 @@ function AvatarDropdown({
             </Link>
           ))}
 
-          {/* ── Logout button (red, separated by a divider) ── */}
+          {/* Logout button */}
           <div className="border-t border-white/6 mt-1 pt-1">
             <Button
               type="button"

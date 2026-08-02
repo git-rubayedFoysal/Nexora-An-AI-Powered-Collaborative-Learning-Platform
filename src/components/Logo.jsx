@@ -1,3 +1,4 @@
+// Nexora logo — icon + text, links to home
 import { Link } from "react-router";
 
 function Logo({ width = "100px" }) {

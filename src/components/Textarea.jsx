@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 
+// A textarea with an optional label above it
 const Textarea = forwardRef(({ label, className = "", ...props }, ref) => {
   const id = useId();
   return (

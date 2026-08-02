@@ -1,3 +1,4 @@
+// Shown when there's no data to display (e.g., no courses, no results)
 function EmptyState({
   icon = "",
   title = "",

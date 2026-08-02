@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 
+// A radio button with a custom circle design
 const Radio = forwardRef(({ label, value, ...props }, ref) => {
   const id = useId();
   return (
@@ -23,7 +24,7 @@ const Radio = forwardRef(({ label, value, ...props }, ref) => {
         {...props}
       />
 
-      {/* circle */}
+      {/* Circle that fills when selected */}
       <div
         className="
         h-5 w-5 rounded-full

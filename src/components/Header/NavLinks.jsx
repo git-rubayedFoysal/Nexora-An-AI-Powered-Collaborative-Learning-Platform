@@ -1,17 +1,5 @@
+// Desktop nav links for guest users (features, courses, stats, reviews)
 import { useNavigate } from "react-router";
-
-/**
- * NavLinks
- * --------
- * Renders the horizontal navigation links shown in the desktop header
- * for **unauthenticated** (guest) users only.
- *
- * Each link uses an animated underline that grows from left-to-right
- * on hover via a Tailwind `after:` pseudo-element trick.
- *
- * Props:
- *  - links: Array<{ name: string, slug: string }>
- */
 function NavLinks({ links }) {
   const navigate = useNavigate();
   return (

@@ -1,3 +1,4 @@
+// Star icon for review ratings
 function SvgStar() {
   return (
     <svg
@@ -10,6 +11,7 @@ function SvgStar() {
   );
 }
 
+// Student and teacher review cards
 function Testimonials() {
   const reviewData = [
     {

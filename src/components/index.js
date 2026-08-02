@@ -1,3 +1,4 @@
+// Re-export all shared components
 import Input from "./Input";
 import Button from "./Button";
 import Login from "./Login";
@@ -29,6 +30,25 @@ import ManageCourses from "./Dashboard/Admin/ManageCourses";
 import EmptyState from "./EmptyState";
 import LoadingState from "./LoadingState";
 import SearchBar from "./SearchBar";
+import CreateModuleModal from "./Course/CreateModuleModal";
+import ModuleModal from "./Course/ModuleModal";
+import CourseCurriculum from "./Course/CourseCurriculum/index.jsx";
+import EditModuleModal from "./Course/EditModuleModal";
+import LessonModal from "./Course/LessonModal";
+import CreateLessonModal from "./Course/CreateLessonModal";
+import EditLessonModal from "./Course/EditLessonModal";
+import PreviewVideoModal from "./Course/PreviewVideoModal";
+import LearningSidebar from "./StudentLearning/LearningSidebar";
+import VideoPlayer from "./StudentLearning/VideoPlayer";
+import PdfViewer from "./StudentLearning/PdfViewer";
+import EmptyLesson from "./StudentLearning/EmptyLesson";
+import LessonItem from "./StudentLearning/LessonItem";
+import ModuleAccordion from "./StudentLearning/ModuleAccordion";
+import LearningHeader from "./StudentLearning/LearningHeader";
+import LessonActionBar from "./StudentLearning/LessonActionBar";
+import LessonTabPanel from "./StudentLearning/LessonTabPanel";
+import LessonNavigation from "./StudentLearning/LessonNavigation";
+import KeyboardHints from "./StudentLearning/KeyboardHints";
 
 export {
   Input,
@@ -62,4 +82,23 @@ export {
   EmptyState,
   LoadingState,
   SearchBar,
+  CreateModuleModal,
+  ModuleModal,
+  CourseCurriculum,
+  EditModuleModal,
+  LessonModal,
+  CreateLessonModal,
+  EditLessonModal,
+  PreviewVideoModal,
+  LearningSidebar,
+  VideoPlayer,
+  PdfViewer,
+  EmptyLesson,
+  LessonItem,
+  ModuleAccordion,
+  LearningHeader,
+  LessonActionBar,
+  LessonTabPanel,
+  LessonNavigation,
+  KeyboardHints,
 };

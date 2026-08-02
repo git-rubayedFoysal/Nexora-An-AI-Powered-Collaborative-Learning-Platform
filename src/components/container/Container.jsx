@@ -1,3 +1,4 @@
+// Page container — full-height wrapper with max-width and padding
 function Container({ children }) {
   return (
     <div className="flex flex-col min-h-screen w-full bg-dark-950">

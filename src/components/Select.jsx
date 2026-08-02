@@ -1,5 +1,6 @@
 import { useId, forwardRef } from "react";
 
+// A dropdown select with an optional label above it
 function Select({ options, label, className = "", ...props }, ref) {
   const id = useId();
 
