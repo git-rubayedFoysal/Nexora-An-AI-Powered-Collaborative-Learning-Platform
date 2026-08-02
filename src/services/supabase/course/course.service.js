@@ -130,16 +130,14 @@ class CourseService {
 
   // Get all courses (admin only)
   async getAllCourses({ page = 1, search = "" }) {
-    let query = supabase
-      .from("courses")
-      .select(
-        `*, users (
+    let query = supabase.from("courses").select(
+      `*, users (
           full_name,
           email,
           role
         )`,
-        { count: "exact" },
-      );
+      { count: "exact" },
+    );
 
     if (search) {
       query = query.or(
@@ -189,6 +187,46 @@ class CourseService {
       .limit(6);
 
     if (error) throw error;
+    return data;
+  }
+  // Recalculate lesson_count and duration for a course from actual lesson data
+  async updateCourseStats(courseId) {
+    const { data: modules, error: modErr } = await supabase
+      .from("modules")
+      .select("id")
+      .eq("course_id", courseId);
+
+    if (modErr) throw modErr;
+
+    const moduleIds = (modules || []).map((m) => m.id);
+
+    let lessonCount = 0;
+    let totalDuration = 0;
+
+    if (moduleIds.length > 0) {
+      const { data: lessons, error: lesErr } = await supabase
+        .from("lessons")
+        .select("duration")
+        .in("module_id", moduleIds);
+
+      if (lesErr) throw lesErr;
+
+      lessonCount = lessons?.length || 0;
+      totalDuration = (lessons || []).reduce(
+        (sum, l) => sum + (l.duration || 0),
+        0,
+      );
+    }
+
+    const { data, error } = await supabase
+      .from("courses")
+      .update({ lesson_count: lessonCount, duration: totalDuration })
+      .eq("id", courseId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
     return data;
   }
 }

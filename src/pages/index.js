@@ -8,7 +8,7 @@ import ErrorPage from "./ErrorPage";
 import DashboardLayout from "./DashboardLayout";
 import EditCourse from "./Course/EditCourse";
 import PublicCourses from "./Course/PublicCourses";
-import CourseDetails from "./Course/CourseDetails";
+import CourseDetails from "./Course/CourseDetails/index.jsx";
 import Checkout from "./Course/Checkout";
 import EnrollmentSuccess from "./Course/EnrollmentSuccess";
 import LearningPage from "./LearningPage";

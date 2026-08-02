@@ -194,6 +194,8 @@ const enrollSlice = createSlice({
       .addCase(updateProgress.fulfilled, (state, action) => {
         state.loading = false;
 
+        if (!action.payload) return;
+
         // Update currentEnrollment if it's the same course
         if (state.currentEnrollment?.course_id === action.payload.course_id) {
           state.currentEnrollment = action.payload;

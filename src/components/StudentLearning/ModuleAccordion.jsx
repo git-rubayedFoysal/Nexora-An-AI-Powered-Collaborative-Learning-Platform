@@ -5,14 +5,14 @@ import { LessonItem } from "../index";
  * ModuleAccordion — Collapsible module card in the sidebar.
  *
  * Shows lesson count + total duration when collapsed.
- * Passes completedLessonIds to each LessonItem for checkmark display.
+ * Passes completedLessons to each LessonItem for checkmark display.
  */
 function ModuleAccordion({
   module: mod,
   lessons,
   isExpanded,
   selectedLessonId,
-  completedLessonIds,
+  completedLessons,
   onToggle,
   onSelectLesson,
   isLoading,
@@ -86,7 +86,7 @@ function ModuleAccordion({
                   key={lesson.id}
                   lesson={lesson}
                   isActive={lesson.id === selectedLessonId}
-                  isCompleted={completedLessonIds?.has(lesson.id) ?? false}
+                  isCompleted={completedLessons?.some((l) => l.lesson_id === lesson.id)}
                   onClick={() => onSelectLesson(lesson)}
                 />
               ))}

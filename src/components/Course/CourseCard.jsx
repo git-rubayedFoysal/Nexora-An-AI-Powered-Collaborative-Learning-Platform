@@ -1,6 +1,7 @@
 // Course card — shows thumbnail, info, and actions based on user role
 import { Button } from "../index";
 import courseStorage from "../../services/supabase/course/course.storage";
+import formatDuration from "../../utils/formatDuration";
 
 // Status badge styles for teacher/admin variants
 const STATUS_CONFIG = {
@@ -125,7 +126,7 @@ function CourseCard({
           </span>
           <span className="w-1 h-1 rounded-full bg-border" />
           <span className="text-[11px] text-slate font-mono">
-            {course.duration ? `${course.duration} hrs` : "Not set"}
+            {course.duration ? `${formatDuration(course.duration)}` : "Not set"}
           </span>
           <span className="w-1 h-1 rounded-full bg-border" />
           <span className="tag bg-teal-dim text-teal border border-teal/20 font-mono">
@@ -174,7 +175,7 @@ function CourseCard({
                          hover:-translate-y-px hover:shadow-[0_6px_24px_rgba(15,191,138,.4)]
                          transition-all duration-200"
             >
-              Continue Learning
+              {course.progress === 0 ? "Start Learning" : "Continue Learning"}
             </Button>
           )}
 

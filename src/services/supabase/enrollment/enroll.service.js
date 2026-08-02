@@ -182,7 +182,7 @@ class EnrollService {
       .eq("student_id", user.id)
       .eq("course_id", courseId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
 

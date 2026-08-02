@@ -7,6 +7,13 @@ import { fetchCourse } from "../features/course/courseSlice";
 import lessonStorage from "../services/supabase/lesson/lesson.storage";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 import {
+  fetchCompletedLessonsByCourse,
+  clearLessonProgress,
+  fetchLessonProgress,
+  markLessonComplete,
+  markLessonIncomplete,
+} from "../features/lessonProgress/lessonProgressSlice";
+import {
   LearningSidebar,
   LearningHeader,
   VideoPlayer,
@@ -36,7 +43,6 @@ function LearningPage() {
   const [loadingModules, setLoadingModules] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [completedLessonIds, setCompletedLessonIds] = useState(new Set());
 
   // ── Redux selectors ──────────────────────────────────────────────────────
   const { modules } = useSelector((s) => s.module);
@@ -44,11 +50,26 @@ function LearningPage() {
     (s) => s.course,
   );
 
+  const { completedLessons, lessonProgress } = useSelector(
+    (s) => s.lessonProgress,
+  );
+
   // ── Fetch course data on mount ───────────────────────────────────────────
   useEffect(() => {
     dispatch(fetchCourseModules({ courseId }));
+    dispatch(fetchCompletedLessonsByCourse({ courseId }));
     dispatch(fetchCourse(courseId));
   }, [dispatch, courseId]);
+
+  // ── Fetch lesson progress when a lesson is selected ─────────────────────
+  useEffect(() => {
+    if (!selectedLesson) return;
+    dispatch(fetchLessonProgress({ lessonId: selectedLesson.id }));
+
+    return () => {
+      dispatch(clearLessonProgress());
+    };
+  }, [dispatch, selectedLesson]);
 
   // ── Lazy-load lessons for a module ───────────────────────────────────────
   const loadModuleLessons = useCallback(
@@ -64,7 +85,7 @@ function LearningPage() {
         .then((data) => {
           setModuleLessons((prev) => ({
             ...prev,
-            [moduleId]: JSON.parse(JSON.stringify(data || [])),
+            [moduleId]: [...(data || [])],
           }));
         })
         .catch(() => {})
@@ -149,20 +170,19 @@ function LearningPage() {
   // ── Mark complete toggle ─────────────────────────────────────────────────
   const handleToggleComplete = useCallback(() => {
     if (!selectedLesson) return;
-    setCompletedLessonIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(selectedLesson.id)) {
-        next.delete(selectedLesson.id);
-      } else {
-        next.add(selectedLesson.id);
-      }
-      return next;
-    });
-  }, [selectedLesson]);
 
-  const isCurrentCompleted = selectedLesson
-    ? completedLessonIds.has(selectedLesson.id)
-    : false;
+    if (
+      completedLessons.find(
+        (lesson) => lesson?.lesson_id === selectedLesson?.id,
+      )
+    ) {
+      dispatch(markLessonIncomplete({ lessonId: selectedLesson?.id }));
+    } else {
+      dispatch(markLessonComplete({ lessonId: selectedLesson?.id }));
+    }
+  }, [dispatch, completedLessons, selectedLesson]);
+
+  const isCurrentCompleted = Boolean(lessonProgress?.completed);
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────
   useKeyboardShortcuts(videoRef, { hasNext, hasPrev, goToNext, goToPrev });
@@ -184,7 +204,7 @@ function LearningPage() {
         moduleLessons={moduleLessons}
         expandedModules={expandedModules}
         selectedLessonId={selectedLesson?.id}
-        completedLessonIds={completedLessonIds}
+        completedLessons={completedLessons}
         onToggleModule={toggleModule}
         onSelectLesson={handleSelectLesson}
         loadingModules={loadingModules}
@@ -200,8 +220,18 @@ function LearningPage() {
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-slate hover:text-white hover:bg-white/6 transition-colors"
             aria-label="Open curriculum sidebar"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
             Curriculum
           </button>
@@ -211,6 +241,7 @@ function LearningPage() {
           selectedCourse={selectedCourse}
           totalLessons={totalLessons}
           courseId={courseId}
+          completedLessons={completedLessons}
         />
 
         {/* Lesson content area */}

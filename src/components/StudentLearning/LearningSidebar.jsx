@@ -14,7 +14,7 @@ function LearningSidebar({
   moduleLessons,
   expandedModules,
   selectedLessonId,
-  completedLessonIds,
+  completedLessons,
   onToggleModule,
   onSelectLesson,
   loadingModules,
@@ -127,7 +127,7 @@ function LearningSidebar({
                 lessons={moduleLessons[mod.id] || []}
                 isExpanded={expandedModules.has(mod.id)}
                 selectedLessonId={selectedLessonId}
-                completedLessonIds={completedLessonIds}
+                completedLessons={completedLessons}
                 onToggle={() => onToggleModule(mod.id)}
                 onSelectLesson={onSelectLesson}
                 isLoading={loadingModules.has(mod.id)}

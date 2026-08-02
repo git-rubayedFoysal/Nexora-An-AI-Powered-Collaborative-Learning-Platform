@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchEnrollment } from "../../features/enroll/enrollSlice";
+import { useDispatch } from "react-redux";
+import { updateProgress } from "../../features/enroll/enrollSlice";
 
 /**
  * LearningHeader — Compact sticky header below the main navbar.
@@ -9,14 +9,24 @@ import { fetchEnrollment } from "../../features/enroll/enrollSlice";
  * Left: back arrow + course title + instructor.
  * Right: lesson count + progress bar.
  */
-function LearningHeader({ selectedCourse, totalLessons, courseId }) {
+function LearningHeader({
+  selectedCourse,
+  totalLessons,
+  courseId,
+  completedLessons,
+}) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentEnrollment } = useSelector((s) => s.enroll);
+  const progress = useMemo(() => {
+    if (!totalLessons) return 0;
+    return ((completedLessons?.length || 0) / totalLessons) * 100;
+  }, [totalLessons, completedLessons]);
 
   useEffect(() => {
-    dispatch(fetchEnrollment(courseId));
-  }, [dispatch, courseId]);
+    if (progress > 0) {
+      dispatch(updateProgress({ courseId, progress }));
+    }
+  }, [dispatch, courseId, progress]);
 
   return (
     <div className="sticky top-17 z-40 glass border-b border-white/6">
@@ -28,8 +38,18 @@ function LearningHeader({ selectedCourse, totalLessons, courseId }) {
             className="p-1.5 -ml-1.5 rounded-lg text-slate hover:text-white hover:bg-white/6 transition-colors shrink-0"
             aria-label="Back to My Learning"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div className="min-w-0">
@@ -48,15 +68,17 @@ function LearningHeader({ selectedCourse, totalLessons, courseId }) {
           <span className="text-[10px] font-mono text-slate-dark">
             {totalLessons} lesson{totalLessons !== 1 && "s"}
           </span>
-          <div className="flex items-center gap-2 w-24">
+          <div className="flex items-center gap-2 w-35">
             <div className="prog flex-1 h-1.5">
               <div
-                className="prog-fill bg-teal"
-                style={{ width: `${currentEnrollment?.progress ?? 0}%` }}
+                className="prog-fill bg-teal transition-colors"
+                style={{ width: `${progress}%` }}
               />
             </div>
             <span className="text-[10px] font-mono text-teal font-bold shrink-0">
-              {Math.round(currentEnrollment?.progress ?? 0)}%
+              {progress === 100
+                ? "completed"
+                : `${Math.round(progress)}%`}
             </span>
           </div>
         </div>

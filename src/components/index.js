@@ -32,11 +32,12 @@ import LoadingState from "./LoadingState";
 import SearchBar from "./SearchBar";
 import CreateModuleModal from "./Course/CreateModuleModal";
 import ModuleModal from "./Course/ModuleModal";
-import CourseCurriculum from "./Course/CourseCurriculum";
+import CourseCurriculum from "./Course/CourseCurriculum/index.jsx";
 import EditModuleModal from "./Course/EditModuleModal";
 import LessonModal from "./Course/LessonModal";
 import CreateLessonModal from "./Course/CreateLessonModal";
 import EditLessonModal from "./Course/EditLessonModal";
+import PreviewVideoModal from "./Course/PreviewVideoModal";
 import LearningSidebar from "./StudentLearning/LearningSidebar";
 import VideoPlayer from "./StudentLearning/VideoPlayer";
 import PdfViewer from "./StudentLearning/PdfViewer";
@@ -88,6 +89,7 @@ export {
   LessonModal,
   CreateLessonModal,
   EditLessonModal,
+  PreviewVideoModal,
   LearningSidebar,
   VideoPlayer,
   PdfViewer,

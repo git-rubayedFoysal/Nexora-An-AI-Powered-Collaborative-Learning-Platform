@@ -129,6 +129,13 @@ export const fetchFeatureCourses = createAsyncThunk(
   },
 );
 
+export const updateCourseStats = createAsyncThunk(
+  "course/updateCourseStats",
+  async (courseId) => {
+    return await courseService.updateCourseStats(courseId);
+  },
+);
+
 const courseSlice = createSlice({
   name: "course",
   initialState,
@@ -292,6 +299,31 @@ const courseSlice = createSlice({
         state.featureCourses = action.payload ?? [];
       })
       .addCase(fetchFeatureCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
+    builder
+      .addCase(updateCourseStats.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCourseStats.fulfilled, (state, action) => {
+        state.loading = false;
+        const { id, lesson_count, duration } = action.payload;
+        // Patch only lesson_count and duration, keep users join and other data
+        const patch = (courses) =>
+          courses.map((c) =>
+            c.id === id ? { ...c, lesson_count, duration } : c,
+          );
+        state.courses = patch(state.courses);
+        state.teacherCourses = patch(state.teacherCourses);
+        state.allCourses = patch(state.allCourses);
+        if (state.selectedCourse?.id === id) {
+          state.selectedCourse = { ...state.selectedCourse, lesson_count, duration };
+        }
+      })
+      .addCase(updateCourseStats.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error?.message;
       });
