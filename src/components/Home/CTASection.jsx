@@ -45,7 +45,7 @@ function CTASection() {
           </Link>
           <a
             href="#features"
-            className="btn-secondary px-10 py-4 rounded-xl text-base font-semibold text-slate border border-white/1 inline-flex items-center gap-2 justify-center"
+            className="btn-secondary border border-violet px-10 py-4 rounded-xl text-base font-semibold text-slate inline-flex items-center gap-2 justify-center"
           >
             Explore Features
           </a>
