@@ -5,6 +5,8 @@ import enrollReducer from "../features/enroll/enrollSlice.js";
 import moduleReducer from "../features/module/moduleSlice.js";
 import lessonReducer from "../features/lesson/lessonSlice.js";
 import lessonProgressReducer from "../features/lessonProgress/lessonProgressSlice.js";
+import assignmentReducer from "../features/assignment/assignmentSlice.js";
+import assignmentSubmissionReducer from "../features/assignment/assignmentSubmissionSlice.js";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +16,7 @@ export const store = configureStore({
     module: moduleReducer,
     lesson: lessonReducer,
     lessonProgress: lessonProgressReducer,
+    assignment: assignmentReducer,
+    assignmentSubmission: assignmentSubmissionReducer,
   },
 });
