@@ -1,28 +1,52 @@
-// Admin dashboard home — platform stats, user management, course overview
-import { fetchCourseStats } from "../../../features/course/courseSlice";
+/**
+ * AdminContent
+ *
+ * Dashboard home for admins.
+ * Shows real platform stats, user breakdown, and course overview.
+ *
+ * Props:
+ *  - role — user role string
+ */
+
+import { fetchCourseStats, fetchAllCourses } from "../../../features/course/courseSlice";
 import { fetchUserStats } from "../../../features/auth/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { LoadingState } from "../../index";
 import { useNavigate } from "react-router";
 
 function AdminContent({ role }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { publishedCourses, loading } = useSelector((state) => state.course);
-  const { totalUsers } = useSelector((state) => state.auth);
+
+  const {
+    totalUsers,
+    totalStudents,
+    totalTeachers,
+    totalAdmins,
+  } = useSelector((state) => state.auth);
+  const {
+    publishedCourses,
+    draftCourses,
+    archivedCourses,
+    allCourses,
+  } = useSelector((state) => state.course);
 
   useEffect(() => {
     dispatch(fetchCourseStats());
     dispatch(fetchUserStats());
+    dispatch(fetchAllCourses({ page: 1 }));
   }, [dispatch]);
 
-  if (loading) {
-    return <LoadingState color="--color-amber" content="Dashboard..." />;
-  }
+  const totalCourses = (publishedCourses || 0) + (draftCourses || 0) + (archivedCourses || 0);
+
+  // Compute percentages for role breakdown
+  const studentPct = totalUsers > 0 ? Math.round((totalStudents / totalUsers) * 100) : 0;
+  const teacherPct = totalUsers > 0 ? Math.round((totalTeachers / totalUsers) * 100) : 0;
+  const adminPct = totalUsers > 0 ? Math.round((totalAdmins / totalUsers) * 100) : 0;
 
   return (
     <>
+      {/* Greeting */}
       <div className="mb-7">
         <h1 className="text-2xl font-bold mb-2 font-display">
           Platform Overview <span className="gradient-text">⚙️</span>
@@ -32,40 +56,32 @@ function AdminContent({ role }) {
         </span>
       </div>
 
-      {/* Stats */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
         {[
           {
             icon: "👥",
-            value: `${totalUsers}`,
+            value: totalUsers || 0,
             label: "Total users",
-            sub: "↑ 12 this week",
-            subColor: "text-emerald-400",
             valueColor: "text-coral",
           },
           {
             icon: "📚",
-            value: `${publishedCourses}`,
-            label: "Active courses",
-            sub: "↑ 2 published",
-            subColor: "text-emerald-400",
+            value: totalCourses,
+            label: "Total courses",
             valueColor: "text-amber",
           },
           {
-            icon: "📋",
-            value: "614",
-            label: "Total enrollments",
-            sub: "↑ 34 this week",
-            subColor: "text-emerald-400",
-            valueColor: "text-violet-light",
+            icon: "🟢",
+            value: totalStudents || 0,
+            label: "Students",
+            valueColor: "text-teal",
           },
           {
-            icon: "📊",
-            value: "79%",
-            label: "Platform avg score",
-            sub: "↑ 3% vs last month",
-            subColor: "text-emerald-400",
-            valueColor: "text-teal",
+            icon: "🟡",
+            value: totalTeachers || 0,
+            label: "Teachers",
+            valueColor: "text-violet-light",
           },
         ].map((card) => (
           <div
@@ -79,9 +95,6 @@ function AdminContent({ role }) {
               {card.value}
             </div>
             <div className="text-xs text-slate font-medium">{card.label}</div>
-            <div className={`text-[11px] mt-1 ${card.subColor}`}>
-              {card.sub}
-            </div>
           </div>
         ))}
       </div>
@@ -89,14 +102,26 @@ function AdminContent({ role }) {
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
         {[
-          { icon: "➕", label: "Add User", path: "/dashboard" },
-          { icon: "🔑", label: "Assign Role", path: "/dashboard" },
           {
             icon: "📚",
             label: "Manage Courses",
             path: "/dashboard/manage-courses",
           },
-          { icon: "📋", label: "Audit Log", path: "/dashboard" },
+          {
+            icon: "📊",
+            label: "View Stats",
+            path: "/dashboard/manage-courses",
+          },
+          {
+            icon: "👥",
+            label: "Users",
+            path: "/dashboard",
+          },
+          {
+            icon: "⚙️",
+            label: "Settings",
+            path: "/dashboard",
+          },
         ].map((a) => (
           <button
             key={a.label}
@@ -115,29 +140,29 @@ function AdminContent({ role }) {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-bold">Users by Role</h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-coral/15 text-coral font-semibold">
-              248 total
+              {totalUsers || 0} total
             </span>
           </div>
           <div className="space-y-4">
             {[
               {
                 label: "🟢 Students",
-                count: "208 · 83.9%",
-                pct: 84,
+                count: `${totalStudents || 0} · ${studentPct}%`,
+                pct: studentPct,
                 color: "bg-teal",
                 textColor: "text-teal",
               },
               {
                 label: "🟡 Teachers",
-                count: "36 · 14.5%",
-                pct: 14,
+                count: `${totalTeachers || 0} · ${teacherPct}%`,
+                pct: teacherPct,
                 color: "bg-amber",
                 textColor: "text-amber",
               },
               {
                 label: "🔴 Admins",
-                count: "4 · 1.6%",
-                pct: 2,
+                count: `${totalAdmins || 0} · ${adminPct}%`,
+                pct: adminPct,
                 color: "bg-coral",
                 textColor: "text-coral",
               },
@@ -158,337 +183,90 @@ function AdminContent({ role }) {
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="mt-6">
-            <h3 className="text-xs font-bold mb-3">Recent Signups</h3>
+        {/* Course Overview */}
+        <div className="glass rounded-2xl p-5 border border-white/6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold">Course Overview</h2>
+            <button
+              onClick={() => navigate("/dashboard/manage-courses")}
+              className="text-xs text-violet-light hover:text-violet transition-colors cursor-pointer"
+            >
+              Manage →
+            </button>
+          </div>
+
+          {/* Course status breakdown */}
+          <div className="grid grid-cols-3 gap-3 mb-5">
             {[
               {
-                initials: "FH",
-                name: "Fahim Hossain",
-                time: "1h ago",
-                role: "Student",
-                avatarClass: "from-teal to-teal-light",
-                badgeClass: "bg-teal/15 text-teal",
+                label: "Published",
+                value: publishedCourses || 0,
+                color: "text-teal",
+                bg: "bg-teal/10",
               },
               {
-                initials: "MR",
-                name: "Dr. Mithila Roy",
-                time: "3h ago",
-                role: "Teacher",
-                avatarClass: "from-amber to-yellow-600",
-                badgeClass: "bg-amber/15 text-amber",
+                label: "Draft",
+                value: draftCourses || 0,
+                color: "text-amber",
+                bg: "bg-amber/10",
               },
               {
-                initials: "RB",
-                name: "Rania Begum",
-                time: "5h ago",
-                role: "Student",
-                avatarClass: "from-violet to-violet-light",
-                badgeClass: "bg-teal/15 text-teal",
+                label: "Archived",
+                value: archivedCourses || 0,
+                color: "text-slate",
+                bg: "bg-white/5",
               },
-            ].map((u, i, arr) => (
+            ].map((s) => (
               <div
-                key={u.name}
-                className={`flex items-center gap-3 py-2.5 ${i < arr.length - 1 ? "border-b border-white/5" : ""}`}
+                key={s.label}
+                className={`${s.bg} rounded-xl p-3 text-center`}
               >
-                <div
-                  className={`w-8 h-8 rounded-full bg-linear-to-br ${u.avatarClass} flex items-center justify-center text-[10px] font-bold text-white`}
-                >
-                  {u.initials}
+                <div className={`text-xl font-black font-mono ${s.color}`}>
+                  {s.value}
                 </div>
-                <div className="flex-1">
-                  <div className="text-xs font-medium text-white">{u.name}</div>
-                  <div className="text-[10px] text-slate">Joined {u.time}</div>
-                </div>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${u.badgeClass}`}
-                >
-                  {u.role}
-                </span>
+                <div className="text-[10px] text-slate mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Right col */}
-        <div className="flex flex-col gap-4">
-          {/* Top Courses */}
-          <div className="glass rounded-2xl p-5 border border-white/6">
-            <h2 className="text-sm font-bold mb-4">
-              Top Courses by Enrollment
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs min-w-90">
-                <thead>
-                  <tr>
-                    {["Course", "Teacher", "Enrolled", "Status"].map((h) => (
-                      <th
-                        key={h}
-                        className={`py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-dark border-b border-white/6 ${h === "Enrolled" ? "text-right" : "text-left"}`}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    {
-                      name: "Web Development",
-                      teacher: "Dr. Hasan",
-                      enrolled: 87,
-                      status: "Active",
-                      statusClass: "bg-teal/15 text-teal",
-                    },
-                    {
-                      name: "Machine Learning",
-                      teacher: "Dr. Karim",
-                      enrolled: 74,
-                      status: "Active",
-                      statusClass: "bg-teal/15 text-teal",
-                    },
-                    {
-                      name: "Data Structures",
-                      teacher: "Prof. Nasrin",
-                      enrolled: 68,
-                      status: "Active",
-                      statusClass: "bg-teal/15 text-teal",
-                    },
-                    {
-                      name: "Database Systems",
-                      teacher: "Prof. Rina",
-                      enrolled: 55,
-                      status: "Active",
-                      statusClass: "bg-teal/15 text-teal",
-                    },
-                    {
-                      name: "OS Fundamentals",
-                      teacher: "Dr. Ahmed",
-                      enrolled: 40,
-                      status: "Draft",
-                      statusClass: "bg-amber/15 text-amber",
-                    },
-                  ].map((c, i, arr) => (
-                    <tr key={c.name} className="nx-tr">
-                      <td
-                        className={`py-2 px-3 text-white font-medium ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                      >
-                        {c.name}
-                      </td>
-                      <td
-                        className={`py-2 px-3 text-slate ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                      >
-                        {c.teacher}
-                      </td>
-                      <td
-                        className={`py-2 px-3 text-right text-slate font-mono ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                      >
-                        {c.enrolled}
-                      </td>
-                      <td
-                        className={`py-2 px-3 ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                      >
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${c.statusClass}`}
-                        >
-                          {c.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Platform Activity chart */}
-          <div className="glass rounded-2xl p-5 border border-white/6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-sm font-bold">Platform Activity</h2>
-              <span className="text-[10px] px-2.5 py-1 rounded-full bg-violet/15 text-violet-light font-semibold border border-violet/20">
-                Last 7 days
-              </span>
-            </div>
-            <div className="flex items-end gap-2 h-24">
-              {[
-                { h: "50%", cls: "bg-coral/40", style: { opacity: 0.8 } },
-                { h: "65%", cls: "bg-coral/50", style: { opacity: 0.85 } },
-                { h: "80%", cls: "bg-coral/55", style: { opacity: 0.85 } },
-                { h: "60%", cls: "bg-coral/45", style: { opacity: 0.8 } },
-                { h: "90%", cls: "bg-coral/60", style: { opacity: 0.9 } },
-                { h: "75%", cls: "bg-coral/50", style: { opacity: 0.85 } },
-                {
-                  h: "98%",
-                  cls: "",
-                  style: {
-                    opacity: 1,
-                    background: "linear-gradient(180deg,#7c5af7,#f05a5a)",
-                  },
-                },
-              ].map((bar, i) => (
+          {/* Recent courses */}
+          <h3 className="text-xs font-bold mb-3">Recent Courses</h3>
+          {allCourses.length === 0 ? (
+            <p className="text-xs text-slate-dark text-center py-3">
+              No courses found.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {allCourses.slice(0, 5).map((course, i, arr) => (
                 <div
-                  key={i}
-                  className={`bar flex-1 ${bar.cls}`}
-                  style={{ height: bar.h, ...bar.style }}
-                />
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                <div
-                  key={d}
-                  className="flex-1 text-center text-[9px] text-slate-dark font-mono"
+                  key={course.id}
+                  className={`flex items-center gap-3 py-2 ${i < arr.length - 1 ? "border-b border-white/5" : ""}`}
                 >
-                  {d}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-white truncate">
+                      {course.title}
+                    </div>
+                    <div className="text-[10px] text-slate">
+                      {course.users?.full_name || "Unknown teacher"}
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                      course.status === "published"
+                        ? "bg-teal/15 text-teal"
+                        : course.status === "draft"
+                          ? "bg-amber/15 text-amber"
+                          : "bg-white/10 text-slate"
+                    }`}
+                  >
+                    {course.status}
+                  </span>
                 </div>
               ))}
-              <div className="flex-1 text-center text-[9px] text-coral font-mono font-medium">
-                Sun
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* All Users table */}
-      <div className="glass rounded-2xl p-5 border border-white/6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h2 className="text-sm font-bold">All Users</h2>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <svg
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search users…"
-                className="nx-input pl-8 pr-3 py-1.5 rounded-lg text-xs bg-white/5 border border-border text-white placeholder-slate-dark transition-all w-40"
-              />
-            </div>
-            <button className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-coral/15 text-coral border border-coral/25 hover:bg-coral/25 transition-colors">
-              + Add user
-            </button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs min-w-120">
-            <thead>
-              <tr>
-                {["Name", "Email", "Role", "Courses", "Joined", "Action"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-dark border-b border-white/6"
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {
-                  name: "Rubayed Foysal",
-                  email: "rubayed@rmu.ac.bd",
-                  role: "Student",
-                  roleClass: "bg-teal/15 text-teal",
-                  courses: 4,
-                  joined: "Jan 2024",
-                  editable: true,
-                },
-                {
-                  name: "Dr. Karim",
-                  email: "karim@rmu.ac.bd",
-                  role: "Teacher",
-                  roleClass: "bg-amber/15 text-amber",
-                  courses: 2,
-                  joined: "Sep 2023",
-                  editable: true,
-                },
-                {
-                  name: "Prof. Nasrin",
-                  email: "nasrin@rmu.ac.bd",
-                  role: "Teacher",
-                  roleClass: "bg-amber/15 text-amber",
-                  courses: 1,
-                  joined: "Sep 2023",
-                  editable: true,
-                },
-                {
-                  name: "Sadia Khanam",
-                  email: "sadia@rmu.ac.bd",
-                  role: "Student",
-                  roleClass: "bg-teal/15 text-teal",
-                  courses: 3,
-                  joined: "Feb 2024",
-                  editable: true,
-                },
-                {
-                  name: "Admin User",
-                  email: "admin@nexora.edu",
-                  role: "Admin",
-                  roleClass: "bg-coral/15 text-coral",
-                  courses: null,
-                  joined: "Jan 2023",
-                  editable: false,
-                },
-              ].map((row, i, arr) => (
-                <tr key={row.name} className="nx-tr">
-                  <td
-                    className={`py-2.5 px-3 text-white font-medium ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.name}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-slate ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.email}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${row.roleClass}`}
-                    >
-                      {row.role}
-                    </span>
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-slate font-mono ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.courses ?? "—"}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-slate ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.joined}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.editable ? (
-                      <span className="text-violet-light text-[10px] cursor-pointer hover:text-violet transition-colors">
-                        Edit
-                      </span>
-                    ) : (
-                      <span className="text-slate-dark text-[10px]">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          )}
         </div>
       </div>
     </>

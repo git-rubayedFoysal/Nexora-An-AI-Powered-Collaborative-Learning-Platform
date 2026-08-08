@@ -24,6 +24,7 @@ const initialState = {
   featureCourses: [],
   courses: [],
   teacherCourses: [],
+  allTeacherCourses: [],
   selectedCourse: null,
   loading: false,
   error: null,
@@ -105,6 +106,14 @@ export const fetchTeacherCourses = createAsyncThunk(
   },
 );
 
+// Get all courses created by the current teacher (lightweight, id + title only)
+export const fetchAllTeacherCourses = createAsyncThunk(
+  "course/fetchAllTeacherCourses",
+  async () => {
+    return await courseService.getAllTeacherCourses();
+  },
+);
+
 // Get all courses (admin only)
 export const fetchAllCourses = createAsyncThunk(
   "course/fetchAllCourses",
@@ -151,6 +160,7 @@ const courseSlice = createSlice({
           state.courses.push(action.payload);
         }
         state.teacherCourses.push(action.payload);
+        state.allTeacherCourses.push(action.payload);
       })
       .addCase(createCourse.rejected, (state, action) => {
         state.loading = false;
@@ -175,6 +185,12 @@ const courseSlice = createSlice({
           (course) => course.id !== action.payload.id,
         );
         state.teacherCourses.push(action.payload);
+
+        state.allTeacherCourses = state.allTeacherCourses.filter(
+          (course) => course.id !== action.payload.id,
+        );
+        state.allTeacherCourses.push(action.payload);
+
         state.selectedCourse = action.payload;
       })
       .addCase(updateCourse.rejected, (state, action) => {
@@ -193,6 +209,10 @@ const courseSlice = createSlice({
           (course) => course.id !== action.payload,
         );
         state.teacherCourses = state.teacherCourses.filter(
+          (course) => course.id !== action.payload,
+        );
+
+        state.allTeacherCourses = state.allTeacherCourses.filter(
           (course) => course.id !== action.payload,
         );
         if (state.selectedCourse?.id === action.payload) {
@@ -282,6 +302,21 @@ const courseSlice = createSlice({
         state.error = action.error?.message;
       });
 
+    // fetchAllTeacherCourses: replace the teacher's full course list
+    builder
+      .addCase(fetchAllTeacherCourses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllTeacherCourses.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allTeacherCourses = action.payload;
+      })
+      .addCase(fetchAllTeacherCourses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
     builder.addCase(fetchCourseStats.fulfilled, (state, action) => {
       state.totalCourses = action.payload.totalCourses;
       state.publishedCourses = action.payload.publishedCourses;
@@ -320,7 +355,11 @@ const courseSlice = createSlice({
         state.teacherCourses = patch(state.teacherCourses);
         state.allCourses = patch(state.allCourses);
         if (state.selectedCourse?.id === id) {
-          state.selectedCourse = { ...state.selectedCourse, lesson_count, duration };
+          state.selectedCourse = {
+            ...state.selectedCourse,
+            lesson_count,
+            duration,
+          };
         }
       })
       .addCase(updateCourseStats.rejected, (state, action) => {

@@ -1,30 +1,46 @@
-// Teacher dashboard home — stats, grade center, course performance, rankings
+/**
+ * TeacherContent
+ *
+ * Dashboard home for teachers.
+ * Shows real stats, teacher's courses, and quick actions.
+ *
+ * Props:
+ *  - role — user role string
+ *  - user — user display name
+ */
+
 import { getGreeting } from "../../../utils/greeting";
-import { fetchCourseStats } from "../../../features/course/courseSlice";
+import {
+  fetchCourseStats,
+  fetchAllTeacherCourses,
+} from "../../../features/course/courseSlice";
+import { fetchMyAssignments } from "../../../features/assignment/assignmentSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { LoadingState } from "../../index";
 
 function TeacherContent({ role, user }) {
   const greeting = getGreeting();
   const dispatch = useDispatch();
-  const nevigate = useNavigate();
+  const navigate = useNavigate();
 
-  const { publishedCourses, loading } = useSelector((state) => state.course);
-
-  const courseCount = publishedCourses;
+  const { publishedCourses, draftCourses, allTeacherCourses } = useSelector(
+    (state) => state.course,
+  );
+  const { myAssignments } = useSelector((state) => state.assignment);
 
   useEffect(() => {
     dispatch(fetchCourseStats());
+    dispatch(fetchAllTeacherCourses());
+    dispatch(fetchMyAssignments());
   }, [dispatch]);
 
-  if (loading) {
-    return <LoadingState color="--color-amber" content="Dashboard..." />;
-  }
+  const courseCount = publishedCourses || 0;
+  const assignmentCount = myAssignments.length;
 
   return (
     <>
+      {/* Greeting */}
       <div className="mb-7">
         <h1 className="text-2xl font-bold mb-2 font-display">
           Good {greeting}, <span className="gradient-text">{user}</span> 📋
@@ -34,39 +50,31 @@ function TeacherContent({ role, user }) {
         </span>
       </div>
 
-      {/* Stats */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
         {[
           {
             icon: "📚",
-            value: `${courseCount}`,
+            value: courseCount,
             label: "Active courses",
-            sub: "87 students enrolled",
-            subColor: "text-slate-dark",
             valueColor: "text-amber",
           },
           {
-            icon: "📋",
-            value: "8",
-            label: "Ungraded submissions",
-            sub: "across 3 courses",
-            subColor: "text-slate-dark",
+            icon: "📝",
+            value: assignmentCount,
+            label: "Assignments",
             valueColor: "text-coral",
           },
           {
-            icon: "📊",
-            value: "76%",
-            label: "Class quiz avg",
-            sub: "↑ 4% this week",
-            subColor: "text-emerald-400",
+            icon: "👥",
+            value: allTeacherCourses.length,
+            label: "Total courses",
             valueColor: "text-violet-light",
           },
           {
-            icon: "✅",
-            value: "91%",
-            label: "Submission rate",
-            sub: "↑ 2% vs last assign",
-            subColor: "text-emerald-400",
+            icon: "📋",
+            value: draftCourses || 0,
+            label: "Draft courses",
             valueColor: "text-teal",
           },
         ].map((card) => (
@@ -81,9 +89,6 @@ function TeacherContent({ role, user }) {
               {card.value}
             </div>
             <div className="text-xs text-slate font-medium">{card.label}</div>
-            <div className={`text-[11px] mt-1 ${card.subColor}`}>
-              {card.sub}
-            </div>
           </div>
         ))}
       </div>
@@ -91,15 +96,31 @@ function TeacherContent({ role, user }) {
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
         {[
-          { icon: "➕", label: "New Course", path: "/dashboard/create-course" },
-          { icon: "📝", label: "New Assignment", path: "/dashboard" },
-          { icon: "❓", label: "Build Quiz", path: "/dashboard" },
-          { icon: "🎨", label: "Whiteboard", path: "/dashboard" },
+          {
+            icon: "➕",
+            label: "New Course",
+            path: "/dashboard/create-course",
+          },
+          {
+            icon: "📝",
+            label: "Assignments",
+            path: "/dashboard/assignments",
+          },
+          {
+            icon: "✅",
+            label: "Grade Center",
+            path: "/dashboard/grade",
+          },
+          {
+            icon: "📚",
+            label: "My Courses",
+            path: "/dashboard/my-courses",
+          },
         ].map((a) => (
           <button
             key={a.label}
             className="feature-card glass rounded-2xl p-4 text-center border border-white/6 cursor-pointer"
-            onClick={() => nevigate(a.path)}
+            onClick={() => navigate(a.path)}
           >
             <div className="text-2xl mb-2">{a.icon}</div>
             <div className="text-xs font-semibold text-slate">{a.label}</div>
@@ -107,318 +128,54 @@ function TeacherContent({ role, user }) {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        {/* Grade Center */}
-        <div className="glass rounded-2xl p-5 border border-white/6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold">Grade Center</h2>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-coral/15 text-coral font-semibold">
-              8 pending
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr>
-                  {["Student", "Assignment", "Status"].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-dark border-b border-white/6"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { student: "Arif H.", assign: "ML Assign #3", graded: false },
-                  {
-                    student: "Nadia R.",
-                    assign: "Binary Tree Lab",
-                    graded: false,
-                  },
-                  {
-                    student: "Kamal S.",
-                    assign: "ML Assign #3",
-                    graded: false,
-                  },
-                  {
-                    student: "Sadia K.",
-                    assign: "REST API Project",
-                    graded: true,
-                  },
-                  {
-                    student: "Tanvir M.",
-                    assign: "Binary Tree Lab",
-                    graded: true,
-                  },
-                ].map((row, i, arr) => (
-                  <tr key={i} className="nx-tr">
-                    <td
-                      className={`py-2.5 px-3 text-slate ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                    >
-                      {row.student}
-                    </td>
-                    <td
-                      className={`py-2.5 px-3 text-slate truncate max-w-25 ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                    >
-                      {row.assign}
-                    </td>
-                    <td
-                      className={`py-2.5 px-3 ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                    >
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${row.graded ? "bg-teal/15 text-teal" : "bg-amber/15 text-amber"}`}
-                      >
-                        {row.graded ? "Graded" : "Ungraded"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Right col */}
-        <div className="flex flex-col gap-4">
-          {/* Course Performance */}
-          <div className="glass rounded-2xl p-5 border border-white/6">
-            <h2 className="text-sm font-bold mb-4">Course Performance</h2>
-            {[
-              {
-                icon: "🧠",
-                name: "Machine Learning",
-                pct: 78,
-                color: "bg-amber",
-                textColor: "text-amber",
-                students: 32,
-              },
-              {
-                icon: "⚙️",
-                name: "Data Structures",
-                pct: 72,
-                color: "",
-                textColor: "text-violet-light",
-                students: 28,
-                fillStyle: { background: "#7c5af7" },
-              },
-              {
-                icon: "🌐",
-                name: "Web Development",
-                pct: 81,
-                color: "bg-teal",
-                textColor: "text-teal",
-                students: 27,
-              },
-            ].map((c, i, arr) => (
-              <div
-                key={c.name}
-                className={`flex items-center gap-3 py-2.5 ${i < arr.length - 1 ? "border-b border-white/5" : ""}`}
-              >
-                <div className="w-8 h-8 rounded-lg bg-white/6 flex items-center justify-center text-sm shrink-0">
-                  {c.icon}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-white font-medium">{c.name}</span>
-                    <span className={`${c.textColor} font-mono`}>{c.pct}%</span>
-                  </div>
-                  <div className="prog">
-                    <div
-                      className={`prog-fill ${c.color}`}
-                      style={{ width: `${c.pct}%`, ...(c.fillStyle ?? {}) }}
-                    />
-                  </div>
-                  <div className="text-[10px] text-slate mt-0.5">
-                    {c.students} students
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Recent Activity */}
-          <div className="glass rounded-2xl p-5 border border-white/6">
-            <h2 className="text-sm font-bold mb-4">Recent Activity</h2>
-            {[
-              {
-                dot: "bg-amber",
-                text: (
-                  <>
-                    <span className="text-white font-medium">Arif H.</span>{" "}
-                    submitted ML Assignment #3
-                  </>
-                ),
-                time: "2 hr ago",
-              },
-              {
-                dot: "bg-violet",
-                text: (
-                  <>
-                    <span className="text-white font-medium">5 students</span>{" "}
-                    completed Mid-term Quiz
-                  </>
-                ),
-                time: "4 hr ago",
-              },
-              {
-                dot: "bg-teal",
-                text: (
-                  <>
-                    New message in{" "}
-                    <span className="text-white font-medium">
-                      ML Basics Chat
-                    </span>
-                  </>
-                ),
-                time: "6 hr ago",
-              },
-            ].map((n, i, arr) => (
-              <div
-                key={i}
-                className={`flex items-start gap-2.5 py-2 ${i < arr.length - 1 ? "border-b border-white/5" : ""}`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${n.dot} mt-1.5 shrink-0`}
-                />
-                <div>
-                  <div className="text-xs text-slate">{n.text}</div>
-                  <div className="text-[10px] text-slate-dark font-mono mt-0.5">
-                    {n.time}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Student Ranking */}
+      {/* My Courses */}
       <div className="glass rounded-2xl p-5 border border-white/6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold">
-            Student Ranking — Machine Learning Basics
-          </h2>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber/15 text-amber font-semibold">
-            Top 5
-          </span>
+          <h2 className="text-sm font-bold">My Courses</h2>
+          {allTeacherCourses.length > 0 && (
+            <button
+              onClick={() => navigate("/dashboard/my-courses")}
+              className="text-xs text-violet-light hover:text-violet transition-colors cursor-pointer"
+            >
+              View all →
+            </button>
+          )}
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr>
-                {[
-                  "#",
-                  "Student",
-                  "Assignments",
-                  "Quizzes",
-                  "Total",
-                  "Grade",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-dark border-b border-white/6"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {
-                  rank: "01",
-                  name: "Sadia Khanam",
-                  assign: "96/100",
-                  quiz: "88/100",
-                  total: 184,
-                  grade: "A+",
-                  gradeClass: "bg-teal/15 text-teal",
-                  rankClass: "text-amber",
-                },
-                {
-                  rank: "02",
-                  name: "Tanvir Mahmud",
-                  assign: "90/100",
-                  quiz: "85/100",
-                  total: 175,
-                  grade: "A",
-                  gradeClass: "bg-teal/15 text-teal",
-                  rankClass: "text-slate",
-                },
-                {
-                  rank: "03",
-                  name: "Nadia Rahman",
-                  assign: "88/100",
-                  quiz: "80/100",
-                  total: 168,
-                  grade: "A−",
-                  gradeClass: "bg-violet/15 text-violet-light",
-                  rankClass: "text-slate",
-                },
-                {
-                  rank: "04",
-                  name: "Arif Hossain",
-                  assign: "82/100",
-                  quiz: "78/100",
-                  total: 160,
-                  grade: "B+",
-                  gradeClass: "bg-violet/15 text-violet-light",
-                  rankClass: "text-slate",
-                },
-                {
-                  rank: "05",
-                  name: "Kamal Sarkar",
-                  assign: "75/100",
-                  quiz: "72/100",
-                  total: 147,
-                  grade: "B",
-                  gradeClass: "bg-white/[.06] text-slate",
-                  rankClass: "text-slate",
-                },
-              ].map((row, i, arr) => (
-                <tr key={i} className="nx-tr">
-                  <td
-                    className={`py-2.5 px-3 font-bold font-mono ${row.rankClass} ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.rank}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-white font-medium ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.name}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-slate font-mono ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.assign}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-slate font-mono ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.quiz}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 text-white font-bold font-mono ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    {row.total}
-                  </td>
-                  <td
-                    className={`py-2.5 px-3 ${i < arr.length - 1 ? "border-b border-white/4" : ""}`}
-                  >
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${row.gradeClass}`}
-                    >
-                      {row.grade}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {allTeacherCourses.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-xs text-slate-dark mb-3">
+              No courses yet. Create your first course to get started.
+            </p>
+            <button
+              onClick={() => navigate("/dashboard/create-course")}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-amber/15 text-amber border border-amber/25 hover:bg-amber/25 transition-colors cursor-pointer"
+            >
+              + Create Course
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {allTeacherCourses.slice(0, 6).map((course) => (
+              <div
+                key={course.id}
+                onClick={() => navigate("/dashboard/my-courses")}
+                className="flex items-center gap-3 p-3 rounded-xl border border-white/6 hover:border-white/12 transition-colors cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-lg bg-amber/10 flex items-center justify-center text-lg shrink-0">
+                  📚
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">
+                    {course.title}
+                  </div>
+                  <div className="text-[10px] text-slate-dark">
+                    View details →
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

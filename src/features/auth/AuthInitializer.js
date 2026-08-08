@@ -37,7 +37,7 @@ function AuthInitializer() {
 
         dispatch(storeLogin(profile));
       } catch (error) {
-        console.log(error);
+        console.error(error);
         throw error;
       } finally {
         dispatch(setLoading(false));

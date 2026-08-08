@@ -1,19 +1,91 @@
-// Student dashboard home — enrolled courses, due assignments, quiz performance
+/**
+ * StudentContent
+ *
+ * Dashboard home for students.
+ * Shows real stats, enrolled courses, and upcoming assignments.
+ *
+ * Props:
+ *  - role — user role string
+ *  - user — user display name
+ */
+
 import { getGreeting } from "../../../utils/greeting";
 import { fetchMyEnrollments } from "../../../features/enroll/enrollSlice";
+import { fetchMySubmissions } from "../../../features/assignment/assignmentSubmissionSlice";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import assignmentService from "../../../services/supabase/assignment/assignment.service";
 
 function StudentContent({ role, user }) {
   const greeting = getGreeting();
   const dispatch = useDispatch();
-  const { totalCourses } = useSelector((state) => state.enroll);
+  const navigate = useNavigate();
 
-  // const enrollCount = myEnrollments.length ?? 0;
+  const { myEnrollments, totalCourses } = useSelector(
+    (state) => state.enroll,
+  );
+  const { mySubmissions } = useSelector(
+    (state) => state.assignmentSubmission,
+  );
+
+  const [dueSoon, setDueSoon] = useState([]);
+  const [dataReady, setDataReady] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchMyEnrollments({}));
+    dispatch(fetchMyEnrollments({ page: 1 }));
+    dispatch(fetchMySubmissions());
   }, [dispatch]);
+
+  // Fetch assignments for enrolled courses to find due-soon ones
+  useEffect(() => {
+    if (myEnrollments.length === 0) return;
+
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const courseIds = myEnrollments.map((e) => e.course_id);
+        const results = await Promise.all(
+          courseIds.map((id) =>
+            assignmentService.getCourseAssignments({ courseId: id }).catch(() => []),
+          ),
+        );
+        if (cancelled) return;
+
+        const submittedIds = new Set(mySubmissions.map((s) => s.assignment_id));
+        const now = new Date();
+
+        const upcoming = results
+          .flat()
+          .filter((a) => a.due_date && new Date(a.due_date) > now && !submittedIds.has(a.id))
+          .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+          .slice(0, 4);
+
+        setDueSoon(upcoming);
+      } catch {
+        // silently fail
+      } finally {
+        if (!cancelled) setDataReady(true);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [myEnrollments, mySubmissions]);
+
+  // ── Derived stats ──
+  const enrolledCount = totalCourses || myEnrollments.length;
+  const submittedCount = mySubmissions.length;
+  const gradedCount = mySubmissions.filter((s) => s.status === "graded").length;
+  const avgProgress =
+    myEnrollments.length > 0
+      ? Math.round(
+          myEnrollments.reduce((sum, e) => sum + (e.progress || 0), 0) /
+            myEnrollments.length,
+        )
+      : 0;
+
   return (
     <>
       {/* Greeting */}
@@ -21,7 +93,6 @@ function StudentContent({ role, user }) {
         <h1 className="text-2xl font-bold mb-2 font-display">
           Good {greeting}, <span className="gradient-text">{user}</span> 👋
         </h1>
-
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-teal/10 text-teal border animate-pulse-teal border-teal/25 font-mono">
           ● {role.toUpperCase()}
         </span>
@@ -32,34 +103,26 @@ function StudentContent({ role, user }) {
         {[
           {
             icon: "📚",
-            value: `${totalCourses}`,
+            value: enrolledCount,
             label: "Enrolled courses",
-            sub: "↑ 1 this month",
-            subColor: "text-emerald-400",
             valueColor: "text-teal",
           },
           {
-            icon: "✅",
-            value: "78%",
-            label: "Assignment rate",
-            sub: "↑ 5% vs last week",
-            subColor: "text-emerald-400",
+            icon: "📝",
+            value: submittedCount,
+            label: "Submissions",
             valueColor: "text-violet-light",
           },
           {
-            icon: "📊",
-            value: "84",
-            label: "Quiz avg score",
-            sub: "↑ 3 pts this week",
-            subColor: "text-emerald-400",
+            icon: "✅",
+            value: gradedCount,
+            label: "Graded",
             valueColor: "text-amber",
           },
           {
-            icon: "🎥",
-            value: "62%",
-            label: "Lecture progress",
-            sub: "12 lectures watched",
-            subColor: "text-slate-dark",
+            icon: "📊",
+            value: `${avgProgress}%`,
+            label: "Avg progress",
             valueColor: "text-coral",
           },
         ].map((card) => (
@@ -74,306 +137,136 @@ function StudentContent({ role, user }) {
               {card.value}
             </div>
             <div className="text-xs text-slate font-medium">{card.label}</div>
-            <div className={`text-[11px] mt-1 ${card.subColor}`}>
-              {card.sub}
-            </div>
           </div>
         ))}
       </div>
 
-      {/* Quick actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-        {[
-          { icon: "🤖", label: "Ask AI Tutor" },
-          { icon: "📤", label: "Submit Assignment" },
-          { icon: "❓", label: "Start Quiz" },
-          { icon: "💬", label: "Open Chat" },
-        ].map((a) => (
-          <button
-            key={a.label}
-            className="feature-card glass rounded-2xl p-4 text-center border border-white/6 cursor-pointer"
-          >
-            <div className="text-2xl mb-2">{a.icon}</div>
-            <div className="text-xs font-semibold text-slate">{a.label}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Courses + right column */}
+      {/* Courses + Due Soon */}
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        {/* Courses */}
+        {/* Enrolled Courses */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold">My Courses</h2>
-            <span className="text-xs text-violet-light cursor-pointer hover:text-violet transition-colors">
-              View all →
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              {
-                icon: "🧠",
-                title: "Machine Learning",
-                sub: "Dr. Karim · 12 lec",
-                pct: 68,
-                color: "bg-teal",
-                bg: "rgba(15,191,138,.15),rgba(15,191,138,.05)",
-              },
-              {
-                icon: "⚙️",
-                title: "Data Structures",
-                sub: "Prof. Nasrin · 18 lec",
-                pct: 45,
-                color: "#7c5af7",
-                bg: "rgba(124,90,247,.15),rgba(124,90,247,.05)",
-              },
-              {
-                icon: "🌐",
-                title: "Web Development",
-                sub: "Dr. Hasan · 20 lec",
-                pct: 82,
-                color: "bg-amber",
-                bg: "rgba(245,166,35,.15),rgba(245,166,35,.05)",
-              },
-              {
-                icon: "🗄️",
-                title: "Database Systems",
-                sub: "Prof. Rina · 14 lec",
-                pct: 30,
-                color: "bg-coral",
-                bg: "rgba(240,90,90,.15),rgba(240,90,90,.05)",
-              },
-            ].map((course) => (
-              <div
-                key={course.title}
-                className="course-card glass rounded-2xl overflow-hidden border border-white/6"
+            {myEnrollments.length > 0 && (
+              <button
+                onClick={() => navigate("/dashboard/my-learning")}
+                className="text-xs text-violet-light hover:text-violet transition-colors cursor-pointer"
               >
-                <div
-                  className="h-20 flex items-center justify-center text-3xl"
-                  style={{ background: `linear-gradient(135deg,${course.bg})` }}
-                >
-                  {course.icon}
-                </div>
-                <div className="p-3.5">
-                  <div className="text-xs font-bold text-white mb-0.5">
-                    {course.title}
-                  </div>
-                  <div className="text-[10px] text-slate mb-2">
-                    {course.sub}
-                  </div>
-                  <div className="prog mb-1">
-                    <div
-                      className={`prog-fill ${course.color.startsWith("bg-") ? course.color : ""}`}
-                      style={{
-                        width: `${course.pct}%`,
-                        ...(course.color.startsWith("#")
-                          ? { background: course.color }
-                          : {}),
-                      }}
-                    />
-                  </div>
-                  <div className="text-[10px] text-slate font-mono">
-                    {course.pct}%
-                  </div>
-                </div>
-              </div>
-            ))}
+                View all →
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* Right col */}
-        <div className="flex flex-col gap-4">
-          {/* Due Soon */}
-          <div className="glass rounded-2xl p-5 border border-white/6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold">Due Soon</h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-coral/15 text-coral font-semibold">
-                2 pending
-              </span>
+          {myEnrollments.length === 0 ? (
+            <div className="glass rounded-2xl p-6 border border-white/6 text-center">
+              <p className="text-xs text-slate-dark">
+                No enrolled courses yet. Browse courses to get started.
+              </p>
             </div>
-            <div>
-              {[
-                {
-                  icon: "📝",
-                  title: "ML Assignment #3 — Regression",
-                  sub: "Machine Learning Basics",
-                  badge: "2d left",
-                  badgeClass: "bg-coral/15 text-coral",
-                },
-                {
-                  icon: "📝",
-                  title: "Binary Tree Implementation",
-                  sub: "Data Structures",
-                  badge: "5d left",
-                  badgeClass: "bg-amber/15 text-amber",
-                },
-                {
-                  icon: "📝",
-                  title: "REST API Project",
-                  sub: "Web Development",
-                  badge: "8d left",
-                  badgeClass: "bg-teal/15 text-teal",
-                },
-              ].map((item, i, arr) => (
-                <div
-                  key={item.title}
-                  className={`flex items-center gap-3 py-2.5 ${i < arr.length - 1 ? "border-b border-white/5" : ""}`}
-                >
-                  <div className="w-8 h-8 rounded-lg bg-amber/10 flex items-center justify-center text-sm shrink-0">
-                    {item.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-white truncate">
-                      {item.title}
-                    </div>
-                    <div className="text-[10px] text-slate">{item.sub}</div>
-                  </div>
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${item.badgeClass}`}
-                  >
-                    {item.badge}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Notifications */}
-          <div className="glass rounded-2xl p-5 border border-white/6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold">Notifications</h2>
-              <span className="text-xs text-violet-light cursor-pointer">
-                All →
-              </span>
-            </div>
-            <div>
-              {[
-                {
-                  dot: "bg-teal",
-                  text: (
-                    <>
-                      Quiz published:{" "}
-                      <span className="text-white font-medium">
-                        ML Mid-term Quiz
-                      </span>
-                    </>
-                  ),
-                  time: "2 min ago",
-                },
-                {
-                  dot: "bg-amber",
-                  text: (
-                    <>
-                      Grade posted:{" "}
-                      <span className="text-white font-medium">88/100</span> on
-                      Assignment #2
-                    </>
-                  ),
-                  time: "1 hr ago",
-                },
-                {
-                  dot: "bg-violet",
-                  text: (
-                    <>
-                      New message in{" "}
-                      <span className="text-white font-medium">
-                        Web Dev Chat
-                      </span>
-                    </>
-                  ),
-                  time: "3 hr ago",
-                },
-              ].map((n, i, arr) => (
-                <div
-                  key={i}
-                  className={`flex items-start gap-2.5 py-2.5 ${i < arr.length - 1 ? "border-b border-white/5" : ""}`}
-                >
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {myEnrollments.slice(0, 4).map((enrollment) => {
+                const course = enrollment.courses;
+                const progress = enrollment.progress || 0;
+                return (
                   <div
-                    className={`w-2 h-2 rounded-full ${n.dot} mt-1.5 shrink-0`}
-                  />
-                  <div>
-                    <div className="text-xs text-slate leading-relaxed">
-                      {n.text}
-                    </div>
-                    <div className="text-[10px] text-slate-dark font-mono mt-0.5">
-                      {n.time}
+                    key={enrollment.id}
+                    onClick={() => navigate(`/my-learning/${course?.id}`)}
+                    className="course-card glass rounded-2xl overflow-hidden border border-white/6 cursor-pointer hover:border-white/12 transition-colors"
+                  >
+                    <div className="p-3.5">
+                      <div className="text-xs font-bold text-white mb-0.5 line-clamp-1">
+                        {course?.title || "Course"}
+                      </div>
+                      <div className="text-[10px] text-slate mb-2">
+                        {course?.users?.full_name || "Instructor"}
+                      </div>
+                      <div className="prog mb-1">
+                        <div
+                          className="prog-fill bg-teal"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-slate font-mono">
+                        {progress}%
+                      </div>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Due Soon */}
+        <div className="glass rounded-2xl p-5 border border-white/6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold">Due Soon</h2>
+            {dueSoon.length > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-coral/15 text-coral font-semibold">
+                {dueSoon.length} pending
+              </span>
+            )}
+          </div>
+          {!dataReady ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="h-12 bg-white/5 rounded-xl animate-pulse" />
               ))}
             </div>
-          </div>
-        </div>
-      </div>
+          ) : dueSoon.length === 0 ? (
+            <p className="text-xs text-slate-dark text-center py-4">
+              No upcoming deadlines. 🎉
+            </p>
+          ) : (
+            <div>
+              {dueSoon.map((assignment, i) => {
+                const due = new Date(assignment.due_date);
+                const now = new Date();
+                const daysLeft = Math.ceil(
+                  (due - now) / (1000 * 60 * 60 * 24),
+                );
+                const badgeClass =
+                  daysLeft <= 2
+                    ? "bg-coral/15 text-coral"
+                    : daysLeft <= 5
+                      ? "bg-amber/15 text-amber"
+                      : "bg-teal/15 text-teal";
 
-      {/* Quiz performance chart */}
-      <div className="glass rounded-2xl p-5 border border-white/6">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-sm font-bold">Quiz Performance</h2>
-          <span className="text-[10px] px-2.5 py-1 rounded-full bg-teal/10 text-teal font-semibold border border-teal/20">
-            Last 7 quizzes
-          </span>
-        </div>
-        <div className="flex items-end gap-2 h-24">
-          {[
-            {
-              h: "55%",
-              style: { opacity: 0.8, background: undefined },
-              cls: "bg-teal/40",
-            },
-            {
-              h: "72%",
-              style: { opacity: 0.85, background: undefined },
-              cls: "bg-teal/50",
-            },
-            {
-              h: "60%",
-              style: { opacity: 0.8, background: undefined },
-              cls: "bg-teal/45",
-            },
-            {
-              h: "88%",
-              style: { opacity: 0.9, background: undefined },
-              cls: "bg-teal/60",
-            },
-            {
-              h: "78%",
-              style: { opacity: 0.85, background: undefined },
-              cls: "bg-teal/55",
-            },
-            {
-              h: "65%",
-              style: { opacity: 0.8, background: undefined },
-              cls: "bg-teal/45",
-            },
-            {
-              h: "95%",
-              style: {
-                opacity: 1,
-                background: "linear-gradient(180deg,#7c5af7,#0fbf8a)",
-              },
-              cls: "",
-            },
-          ].map((bar, i) => (
-            <div
-              key={i}
-              className={`bar flex-1 ${bar.cls}`}
-              style={{ height: bar.h, ...bar.style }}
-            />
-          ))}
-        </div>
-        <div className="flex gap-2 mt-2">
-          {["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"].map((q) => (
-            <div
-              key={q}
-              className="flex-1 text-center text-[9px] text-slate-dark font-mono"
-            >
-              {q}
+                return (
+                  <div
+                    key={assignment.id}
+                    onClick={() =>
+                      navigate(`/dashboard/assignments/${assignment.id}`)
+                    }
+                    className={`flex items-center gap-3 py-2.5 cursor-pointer hover:bg-white/3 rounded-lg px-2 transition-colors ${
+                      i < dueSoon.length - 1 ? "border-b border-white/5" : ""
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber/10 flex items-center justify-center text-sm shrink-0">
+                      📝
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-white truncate">
+                        {assignment.title}
+                      </div>
+                      <div className="text-[10px] text-slate">
+                        {assignment.modules?.courses?.title || ""}
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${badgeClass}`}
+                    >
+                      {daysLeft <= 0
+                        ? "Today"
+                        : daysLeft === 1
+                          ? "1 day"
+                          : `${daysLeft} days`}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-          <div className="flex-1 text-center text-[9px] text-teal font-mono font-medium">
-            Q7
-          </div>
+          )}
         </div>
       </div>
     </>

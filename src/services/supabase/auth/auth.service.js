@@ -108,6 +108,30 @@ class AuthService {
     });
   }
 
+  // Update the current user's profile in the users table
+  async updateProfile({ fullName }) {
+    try {
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
+      if (userError || !userData?.user) throw new Error("Not authenticated");
+
+      const userId = userData.user.id;
+
+      const { data, error } = await supabase
+        .from("users")
+        .update({ full_name: fullName })
+        .eq("id", userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Update profile error:", error.message);
+      throw error;
+    }
+  }
+
   // Get total user counts by role for the admin dashboard
   async getUserStats() {
     const { data, error } = await supabase.from("users").select("role");
@@ -119,6 +143,45 @@ class AuthService {
       totalTeachers: data.filter((user) => user.role === "teacher").length,
       totalAdmins: data.filter((user) => user.role === "admin").length,
     };
+  }
+
+  // Get all users (admin) with pagination, search, and role filter
+  async getAllUsers({ page = 1, search = "", role = "" }) {
+    let query = supabase
+      .from("users")
+      .select("*", { count: "exact" });
+
+    if (search) {
+      query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+
+    if (role && role !== "all") {
+      query = query.eq("role", role);
+    }
+
+    const from = (page - 1) * 10;
+    const to = from + 10 - 1;
+
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    return { users: data, total: count };
+  }
+
+  // Update a user's role (admin only)
+  async updateUserRole({ userId, role }) {
+    const { data, error } = await supabase
+      .from("users")
+      .update({ role })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 }
 

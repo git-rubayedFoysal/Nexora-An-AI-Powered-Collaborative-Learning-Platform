@@ -171,6 +171,21 @@ class CourseService {
     };
   }
 
+  // Get all courses created by the current teacher (id + title only)
+  async getAllTeacherCourses() {
+    const user = await authService.getUser();
+    if (!user) throw new Error("User not found.");
+
+    const { data, error } = await supabase
+      .from("courses")
+      .select("id, title")
+      .eq("teacher_id", user.id)
+      .order("title", { ascending: true });
+
+    if (error) throw error;
+    return data;
+  }
+
   // Get the latest published courses for the homepage
   async getFeaturedCourses() {
     const { data, error } = await supabase

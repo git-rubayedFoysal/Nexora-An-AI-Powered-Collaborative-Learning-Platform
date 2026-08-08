@@ -10,57 +10,38 @@ import authService from "../../services/supabase/auth/auth.service";
 
 const MENUS = {
   student: {
-    // Active item: bg + text color + left border — only the matched item gets this
     accentClass: "bg-teal/10 text-teal border-l-2 border-teal",
     sections: [
       {
         title: "MAIN",
         items: [
-          // FIX: end={true} so /dashboard only activates on exact match,
-          // not on every child route like /dashboard/my-learning
           { name: "Dashboard", path: "/dashboard", icon: "🏠", end: true },
           {
             name: "My Learning",
             path: "/dashboard/my-learning",
             icon: "📚",
-            badge: "4",
-            badgeColor: "bg-teal/15 text-teal",
           },
           {
             name: "Assignments",
             path: "/dashboard/assignments",
             icon: "📝",
-            badge: "2",
-            badgeColor: "bg-amber/15 text-amber",
           },
-          { name: "Quizzes", path: "/quizzes", icon: "❓" },
-          { name: "Lectures", path: "/lectures", icon: "🎥" },
+          { name: "Quizzes", path: "/quizzes", icon: "❓", comingSoon: true },
+          { name: "Lectures", path: "/lectures", icon: "🎥", comingSoon: true },
         ],
       },
       {
         title: "TOOLS",
         items: [
-          { name: "AI Tutor", path: "/ai-tutor", icon: "🤖" },
-          {
-            name: "Chat",
-            path: "/dashboard/chat",
-            icon: "💬",
-            badge: "5",
-            badgeColor: "bg-violet/20 text-violet-light",
-          },
-          { name: "Analytics", path: "/analytics", icon: "📊" },
+          { name: "AI Tutor", path: "/ai-tutor", icon: "🤖", comingSoon: true },
+          { name: "Chat", path: "/dashboard/chat", icon: "💬", comingSoon: true },
+          { name: "Analytics", path: "/analytics", icon: "📊", comingSoon: true },
         ],
       },
       {
         title: "ACCOUNT",
         items: [
-          {
-            name: "Notifications",
-            path: "/dashboard/notifications",
-            icon: "🔔",
-            badge: "3",
-            badgeColor: "bg-teal/15 text-teal",
-          },
+          { name: "Notifications", path: "/dashboard/notifications", icon: "🔔", comingSoon: true },
           { name: "Profile", path: "/dashboard/profile", icon: "👤" },
         ],
       },
@@ -78,18 +59,14 @@ const MENUS = {
             name: "My Courses",
             path: "/dashboard/my-courses",
             icon: "📚",
-            badge: "3",
-            badgeColor: "bg-amber/15 text-amber",
           },
           {
             name: "Assignments",
             path: "/dashboard/assignments",
             icon: "📝",
-            badge: "8",
-            badgeColor: "bg-coral/15 text-coral",
           },
-          { name: "Quiz Builder", path: "/dashboard/quizzes", icon: "❓" },
-          { name: "Lectures", path: "/dashboard/lectures", icon: "🎥" },
+          { name: "Quiz Builder", path: "/dashboard/quizzes", icon: "❓", comingSoon: true },
+          { name: "Lectures", path: "/dashboard/lectures", icon: "🎥", comingSoon: true },
         ],
       },
       {
@@ -99,22 +76,16 @@ const MENUS = {
             name: "Grade Center",
             path: "/dashboard/grade",
             icon: "✅",
-            badge: "8",
-            badgeColor: "bg-amber/15 text-amber",
           },
-          { name: "Whiteboard", path: "/dashboard/whiteboard", icon: "🎨" },
-          { name: "Analytics", path: "/dashboard/analytics", icon: "📊" },
-          { name: "Chat", path: "/dashboard/chat", icon: "💬" },
+          { name: "Whiteboard", path: "/dashboard/whiteboard", icon: "🎨", comingSoon: true },
+          { name: "Analytics", path: "/dashboard/analytics", icon: "📊", comingSoon: true },
+          { name: "Chat", path: "/dashboard/chat", icon: "💬", comingSoon: true },
         ],
       },
       {
         title: "ACCOUNT",
         items: [
-          {
-            name: "Notifications",
-            path: "/dashboard/notifications",
-            icon: "🔔",
-          },
+          { name: "Notifications", path: "/dashboard/notifications", icon: "🔔", comingSoon: true },
           { name: "Profile", path: "/dashboard/profile", icon: "👤" },
         ],
       },
@@ -128,40 +99,28 @@ const MENUS = {
         title: "PLATFORM",
         items: [
           { name: "Dashboard", path: "/dashboard", icon: "🏠", end: true },
-          {
-            name: "Users",
-            path: "/dashboard/users",
-            icon: "👥",
-            badge: "248",
-            badgeColor: "bg-coral/15 text-coral",
-          },
+          { name: "Users", path: "/dashboard/users", icon: "👥" },
           {
             name: "Courses",
             path: "/dashboard/manage-courses",
             icon: "📚",
-            badge: "12",
-            badgeColor: "bg-amber/15 text-amber",
           },
           { name: "Enrollment", path: "/dashboard/enrollment", icon: "📋" },
-          { name: "Statistics", path: "/dashboard/statistics", icon: "📊" },
+          { name: "Statistics", path: "/dashboard/statistics", icon: "📊", comingSoon: true },
         ],
       },
       {
         title: "SYSTEM",
         items: [
-          { name: "Settings", path: "/dashboard/settings", icon: "⚙️" },
+          { name: "Settings", path: "/dashboard/settings", icon: "⚙️", comingSoon: true },
           { name: "Role & Access", path: "/dashboard/role-access", icon: "🛡️" },
-          { name: "Audit Log", path: "/dashboard/log", icon: "📋" },
+          { name: "Audit Log", path: "/dashboard/log", icon: "📋", comingSoon: true },
         ],
       },
       {
         title: "ACCOUNT",
         items: [
-          {
-            name: "Notifications",
-            path: "/dashboard/notifications",
-            icon: "🔔",
-          },
+          { name: "Notifications", path: "/dashboard/notifications", icon: "🔔", comingSoon: true },
         ],
       },
     ],
@@ -215,27 +174,32 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
                 {section.title}
               </div>
 
-              {section.items.map((item) => (
+              {section.items.map((item) =>
+                item.comingSoon ? (
+                  <div
+                    key={item.path}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl
+                               text-sm font-medium text-slate-dark/50 cursor-not-allowed
+                               select-none"
+                    title="Coming soon"
+                  >
+                    <span className="text-base leading-none opacity-40">{item.icon}</span>
+                    <span className="truncate opacity-50">{item.name}</span>
+                    <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-semibold
+                                     bg-white/5 text-slate-dark/40 border border-white/5 shrink-0">
+                      Soon
+                    </span>
+                  </div>
+                ) : (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   onClick={onClose}
-                  /*
-                   * FIX: `end` prop forwarded from item config.
-                   * Dashboard items have end={true} so /dashboard only
-                   * activates on the exact path, not on every child route.
-                   * All other items default to end={false} (NavLink default).
-                   */
                   end={item.end ?? false}
                   className={({ isActive }) =>
                     [
                       "nav-item flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl",
                       "text-sm font-medium transition-colors",
-                      /*
-                       * FIX: active → full accentClass (bg + color + border).
-                       * inactive → text-slate + hover only, zero background.
-                       * This ensures only the matched item is highlighted.
-                       */
                       isActive
                         ? config.accentClass
                         : "text-slate hover:text-white hover:bg-white/6",
@@ -244,15 +208,9 @@ function Sidebar({ role = "student", isOpen = false, onClose }) {
                 >
                   <span className="text-base leading-none">{item.icon}</span>
                   <span className="truncate">{item.name}</span>
-                  {item.badge && (
-                    <span
-                      className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${item.badgeColor}`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
                 </NavLink>
-              ))}
+                ),
+              )}
             </div>
           ))}
 

@@ -38,11 +38,13 @@ import LessonModal from "./Course/LessonModal";
 import CreateLessonModal from "./Course/CreateLessonModal";
 import EditLessonModal from "./Course/EditLessonModal";
 import PreviewVideoModal from "./Course/PreviewVideoModal";
+import TeacherAssignmentModal from "./Dashboard/Teacher/Assignment/TeacherAssignmentModal.jsx";
 import LearningSidebar from "./StudentLearning/LearningSidebar";
 import VideoPlayer from "./StudentLearning/VideoPlayer";
 import PdfViewer from "./StudentLearning/PdfViewer";
 import EmptyLesson from "./StudentLearning/EmptyLesson";
 import LessonItem from "./StudentLearning/LessonItem";
+import AssignmentItem from "./StudentLearning/AssignmentItem";
 import ModuleAccordion from "./StudentLearning/ModuleAccordion";
 import LearningHeader from "./StudentLearning/LearningHeader";
 import LessonActionBar from "./StudentLearning/LessonActionBar";
@@ -90,11 +92,13 @@ export {
   CreateLessonModal,
   EditLessonModal,
   PreviewVideoModal,
+  TeacherAssignmentModal,
   LearningSidebar,
   VideoPlayer,
   PdfViewer,
   EmptyLesson,
   LessonItem,
+  AssignmentItem,
   ModuleAccordion,
   LearningHeader,
   LessonActionBar,

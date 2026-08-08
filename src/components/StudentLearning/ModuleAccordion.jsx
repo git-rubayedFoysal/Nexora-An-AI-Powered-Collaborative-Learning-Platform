@@ -1,15 +1,17 @@
 import formatDuration from "../../utils/formatDuration";
-import { LessonItem } from "../index";
+import { LessonItem, AssignmentItem } from "../index";
 
 /**
  * ModuleAccordion — Collapsible module card in the sidebar.
  *
  * Shows lesson count + total duration when collapsed.
  * Passes completedLessons to each LessonItem for checkmark display.
+ * Shows assignments below lessons when expanded.
  */
 function ModuleAccordion({
   module: mod,
   lessons,
+  assignments,
   isExpanded,
   selectedLessonId,
   completedLessons,
@@ -18,6 +20,7 @@ function ModuleAccordion({
   isLoading,
 }) {
   const totalDuration = lessons.reduce((sum, l) => sum + (l.duration || 0), 0);
+  const hasAssignments = assignments && assignments.length > 0;
 
   return (
     <div>
@@ -73,14 +76,15 @@ function ModuleAccordion({
             <div className="px-5 py-6 text-center">
               <p className="text-xs text-slate-dark">Loading lessons…</p>
             </div>
-          ) : lessons.length === 0 ? (
+          ) : lessons.length === 0 && !hasAssignments ? (
             <div className="px-5 py-6 text-center">
               <p className="text-xs text-slate-dark">
-                No lessons in this module yet.
+                No content in this module yet.
               </p>
             </div>
           ) : (
             <div className="p-2 space-y-0.5">
+              {/* Lessons */}
               {lessons.map((lesson) => (
                 <LessonItem
                   key={lesson.id}
@@ -90,6 +94,21 @@ function ModuleAccordion({
                   onClick={() => onSelectLesson(lesson)}
                 />
               ))}
+
+              {/* Assignments */}
+              {hasAssignments && (
+                <>
+                  {lessons.length > 0 && (
+                    <div className="my-1 border-t border-white/5" />
+                  )}
+                  {assignments.map((assignment) => (
+                    <AssignmentItem
+                      key={assignment.id}
+                      assignment={assignment}
+                    />
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCourseModules } from "../features/module/moduleSlice";
 import { fetchModuleLessons } from "../features/lesson/lessonSlice";
+import { fetchModuleAssignments } from "../features/assignment/assignmentSlice";
 import { fetchCourse } from "../features/course/courseSlice";
 import lessonStorage from "../services/supabase/lesson/lesson.storage";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
@@ -40,6 +41,7 @@ function LearningPage() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [expandedModules, setExpandedModules] = useState(new Set());
   const [moduleLessons, setModuleLessons] = useState({});
+  const [moduleAssignments, setModuleAssignments] = useState({});
   const [loadingModules, setLoadingModules] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -100,6 +102,22 @@ function LearningPage() {
     [dispatch],
   );
 
+  // ── Lazy-load assignments for a module ─────────────────────────────────
+  const loadModuleAssignments = useCallback(
+    (moduleId) => {
+      dispatch(fetchModuleAssignments({ moduleId }))
+        .unwrap()
+        .then((data) => {
+          setModuleAssignments((prev) => ({
+            ...prev,
+            [moduleId]: [...(data || [])],
+          }));
+        })
+        .catch(() => {});
+    },
+    [dispatch],
+  );
+
   // ── Toggle module expand/collapse ────────────────────────────────────────
   const toggleModule = useCallback(
     (moduleId) => {
@@ -113,11 +131,16 @@ function LearningPage() {
         }
         return next;
       });
-      if (isExpanding && !moduleLessons[moduleId]) {
-        loadModuleLessons(moduleId);
+      if (isExpanding) {
+        if (!moduleLessons[moduleId]) {
+          loadModuleLessons(moduleId);
+        }
+        if (!moduleAssignments[moduleId]) {
+          loadModuleAssignments(moduleId);
+        }
       }
     },
-    [expandedModules, moduleLessons, loadModuleLessons],
+    [expandedModules, moduleLessons, moduleAssignments, loadModuleLessons, loadModuleAssignments],
   );
 
   // ── Select lesson from sidebar ───────────────────────────────────────────
@@ -202,6 +225,7 @@ function LearningPage() {
       <LearningSidebar
         modules={modules}
         moduleLessons={moduleLessons}
+        moduleAssignments={moduleAssignments}
         expandedModules={expandedModules}
         selectedLessonId={selectedLesson?.id}
         completedLessons={completedLessons}

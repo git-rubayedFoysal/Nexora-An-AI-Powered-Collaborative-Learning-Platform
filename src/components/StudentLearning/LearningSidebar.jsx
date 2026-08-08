@@ -12,6 +12,7 @@ import { ModuleAccordion } from "../index";
 function LearningSidebar({
   modules,
   moduleLessons,
+  moduleAssignments,
   expandedModules,
   selectedLessonId,
   completedLessons,
@@ -125,6 +126,7 @@ function LearningSidebar({
                 key={mod.id}
                 module={mod}
                 lessons={moduleLessons[mod.id] || []}
+                assignments={moduleAssignments[mod.id] || []}
                 isExpanded={expandedModules.has(mod.id)}
                 selectedLessonId={selectedLessonId}
                 completedLessons={completedLessons}

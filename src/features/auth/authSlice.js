@@ -9,6 +9,14 @@ export const fetchUserStats = createAsyncThunk(
   },
 );
 
+// Update the current user's profile
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async ({ fullName }) => {
+    return await authService.updateProfile({ fullName });
+  },
+);
+
 const initialState = {
   userData: null,
   isAuthenticated: false,
@@ -46,6 +54,9 @@ const authSlice = createSlice({
       state.totalStudents = action.payload.totalStudents;
       state.totalTeachers = action.payload.totalTeachers;
       state.totalAdmins = action.payload.totalAdmins;
+    });
+    builder.addCase(updateProfile.fulfilled, (state, action) => {
+      state.userData = { ...state.userData, ...action.payload };
     });
   },
 });
