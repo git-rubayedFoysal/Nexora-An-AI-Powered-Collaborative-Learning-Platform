@@ -188,6 +188,50 @@ class EnrollService {
 
     return data;
   }
+
+  /**
+   * Get all enrollments across all courses (admin view).
+   * Joins users (student) and courses (with teacher info).
+   */
+  async getAllEnrollments({ page = 1, search = "", courseId = "" }) {
+    let query = supabase
+      .from("enrollments")
+      .select(
+        `
+      *,
+      users (
+        full_name,
+        email,
+        role
+      ),
+      courses (
+        title,
+        users!teacher_id (
+          full_name
+        )
+      )
+    `,
+        { count: "exact" },
+      )
+      .order("enrolled_at", { ascending: false });
+
+    if (search) {
+      query = query.or(`users.full_name.ilike.%${search}%,users.email.ilike.%${search}%,courses.title.ilike.%${search}%`);
+    }
+
+    if (courseId) {
+      query = query.eq("course_id", courseId);
+    }
+
+    const from = (page - 1) * 10;
+    const to = from + 10 - 1;
+
+    const { data, error, count } = await query.range(from, to);
+
+    if (error) throw error;
+
+    return { enrollments: data, total: count };
+  }
 }
 
 const enrollService = new EnrollService();

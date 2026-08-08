@@ -1,60 +1,67 @@
-// Redux slice for assignment submissions (submit, update, delete, fetch, grade).
-// Coordinates the database service (submission service), file storage
-// (submission storage), plus auth and assignment lookups.
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
 import submissionService from "../../services/supabase/assignment/submission.service";
 import submissionStorage from "../../services/supabase/assignment/submission.storage";
 import assignmentService from "../../services/supabase/assignment/assignment.service";
 import authService from "../../services/supabase/auth/auth.service";
 
-// Build a unique storage path for a submission file:
-// <courseId>/<assignmentId>/<studentId>/<sanitized-name>-<timestamp>.<ext>
 function generateFilePath(fileName, file, studentId, courseId, assignmentId) {
   const extension = file.name.split(".").pop()?.toLowerCase();
-  // Strip the original extension and sanitize the name for safe storage use
+
   const sanitizedName = (fileName || file.name)
     .replace(/\.[^/.]+$/, "")
     .trim()
     .replace(/[^a-zA-Z0-9-_]/g, "-")
     .replace(/-+/g, "-")
     .toLowerCase();
-  // Timestamp suffix prevents filename collisions
+
   const uniqueName = `${sanitizedName}-${Date.now()}`;
 
   return `${courseId}/${assignmentId}/${studentId}/${uniqueName}.${extension}`;
 }
 
-// Slice state:
-// - submission:             a single submission (e.g. teacher viewing one)
-// - mySubmission:           the current student's submission for one assignment
-// - mySubmissions:          all of the current student's submissions
-// - assignmentSubmissions:  all submissions for an assignment (teacher view)
-// - loading / error:        request status for async thunks
 const initialState = {
+  // One specific submission
   submission: null,
+
+  // Current student's submission for one assignment
   mySubmission: null,
+
+  // All submissions belonging to current student
   mySubmissions: [],
+
+  // Submissions loaded for teacher's Grade Center
   assignmentSubmissions: [],
 
   loading: false,
   error: null,
 };
 
-// Submit an assignment: resolve the current user and course, upload the
-// optional file, then create the submission row. Deletes the file on failure.
+/* ============================================================
+   SUBMIT ASSIGNMENT
+============================================================ */
+
 export const submitAssignment = createAsyncThunk(
   "assignmentSubmission/submitAssignment",
-  async ({ assignmentId, submissionText, fileName = null, file = null }) => {
+  async (
+    { assignmentId, submissionText, fileName = null, file = null },
+    { rejectWithValue },
+  ) => {
     let filePath = null;
 
     try {
       const user = await authService.getUser();
-      if (!user) throw new Error("User not found.");
+
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
       const studentId = user.id;
 
       const assignment = await assignmentService.getAssignment({
         assignmentId,
       });
+
       const courseId = assignment.modules.course_id;
 
       if (file) {
@@ -65,9 +72,7 @@ export const submitAssignment = createAsyncThunk(
           courseId,
           assignmentId,
         );
-      }
 
-      if (filePath) {
         await submissionStorage.uploadSubmission(filePath, file);
       }
 
@@ -79,271 +84,580 @@ export const submitAssignment = createAsyncThunk(
         filePath,
       });
     } catch (error) {
-      if (filePath) await submissionStorage.deleteSubmission(filePath);
-      throw error;
+      if (filePath) {
+        try {
+          await submissionStorage.deleteSubmission(filePath);
+        } catch (storageError) {
+          console.error("FAILED TO DELETE UPLOADED FILE:", storageError);
+        }
+      }
+
+      return rejectWithValue(error.message || "Failed to submit assignment.");
     }
   },
 );
 
-// Update an existing submission's text and file metadata (no upload here)
+/* ============================================================
+   UPDATE SUBMISSION
+============================================================ */
+
+/*
+  IMPORTANT:
+
+  This thunk only updates the DATABASE.
+
+  File replacement is handled in the component:
+  1. Upload new file
+  2. Update database with new path
+  3. Delete old file
+
+  That keeps storage handling separate from this database thunk.
+*/
+
 export const updateSubmission = createAsyncThunk(
   "assignmentSubmission/updateSubmission",
-  async ({ submissionId, submissionText, fileName, filePath }) => {
-    return await submissionService.updateSubmission({
-      submissionId,
-      submissionText,
-      fileName,
-      filePath,
-    });
+  async (
+    { submissionId, submissionText, fileName, filePath },
+    { rejectWithValue },
+  ) => {
+    try {
+      return await submissionService.updateSubmission({
+        submissionId,
+        submissionText,
+        fileName,
+        filePath,
+      });
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to update submission.");
+    }
   },
 );
 
-// Delete a submission; returns its id so the reducer can remove it from state
+/* ============================================================
+   DELETE SUBMISSION
+============================================================ */
+
 export const deleteSubmission = createAsyncThunk(
   "assignmentSubmission/deleteSubmission",
-  async ({ submissionId }) => {
-    await submissionService.deleteSubmission({ submissionId });
-    return submissionId;
+  async ({ submissionId }, { rejectWithValue }) => {
+    try {
+      /*
+        IMPORTANT:
+        If submissionService.deleteSubmission only deletes
+        the database row, the storage file remains.
+
+        We need the submission first so we know file_path.
+      */
+
+      const submission = await submissionService.getSubmission({
+        submissionId,
+      });
+
+      await submissionService.deleteSubmission({
+        submissionId,
+      });
+
+      if (submission?.file_path) {
+        try {
+          await submissionStorage.deleteSubmission(submission.file_path);
+        } catch (storageError) {
+          console.error("FAILED TO DELETE SUBMISSION FILE:", storageError);
+        }
+      }
+
+      return submissionId;
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to delete submission.");
+    }
   },
 );
 
-// Fetch the current student's submission for a given assignment
+/* ============================================================
+   FETCH MY SUBMISSION
+============================================================ */
+
 export const fetchMySubmission = createAsyncThunk(
   "assignmentSubmission/fetchMySubmission",
-  async ({ assignmentId }) => {
-    const user = await authService.getUser();
-    if (!user) throw new Error("User not found.");
-    const studentId = user.id;
+  async ({ assignmentId }, { rejectWithValue }) => {
+    try {
+      const user = await authService.getUser();
 
-    return await submissionService.getMySubmission({ assignmentId, studentId });
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
+      return await submissionService.getMySubmission({
+        assignmentId,
+        studentId: user.id,
+      });
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch submission.");
+    }
   },
 );
 
-// Fetch all submissions made by the current student
+/* ============================================================
+   FETCH ALL MY SUBMISSIONS
+============================================================ */
+
 export const fetchMySubmissions = createAsyncThunk(
   "assignmentSubmission/fetchMySubmissions",
-  async () => {
-    const user = await authService.getUser();
-    if (!user) throw new Error("User not found.");
-    const studentId = user.id;
+  async (_, { rejectWithValue }) => {
+    try {
+      const user = await authService.getUser();
 
-    return await submissionService.getMySubmissions({ studentId });
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
+      return await submissionService.getMySubmissions({
+        studentId: user.id,
+      });
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch submissions.");
+    }
   },
 );
 
-// Fetch all submissions belonging to an assignment (teacher/instructor view)
+/* ============================================================
+   FETCH ASSIGNMENT SUBMISSIONS
+============================================================ */
+
 export const fetchAssignmentSubmissions = createAsyncThunk(
   "assignmentSubmission/fetchAssignmentSubmissions",
-  async ({ assignmentId }) => {
-    return await submissionService.getAssignmentSubmissions({ assignmentId });
+  async ({ assignmentId }, { rejectWithValue }) => {
+    try {
+      return await submissionService.getAssignmentSubmissions({
+        assignmentId,
+      });
+    } catch (error) {
+      return rejectWithValue(
+        error.message || "Failed to fetch assignment submissions.",
+      );
+    }
   },
 );
 
-// Fetch a single submission by id
+/* ============================================================
+   FETCH SINGLE SUBMISSION
+============================================================ */
+
 export const fetchSubmission = createAsyncThunk(
   "assignmentSubmission/fetchSubmission",
-  async ({ submissionId }) => {
-    return await submissionService.getSubmission({ submissionId });
+  async ({ submissionId }, { rejectWithValue }) => {
+    try {
+      return await submissionService.getSubmission({
+        submissionId,
+      });
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to fetch submission.");
+    }
   },
 );
 
-// Grade a submission by setting its score and feedback
+/* ============================================================
+   GRADE SUBMISSION
+============================================================ */
+
 export const gradeSubmission = createAsyncThunk(
   "assignmentSubmission/gradeSubmission",
-  async ({ submissionId, score, feedback }) => {
-    return await submissionService.gradeSubmission({
-      submissionId,
-      score,
-      feedback,
-    });
+  async ({ submissionId, score, feedback }, { rejectWithValue }) => {
+    try {
+      return await submissionService.gradeSubmission({
+        submissionId,
+        score,
+        feedback,
+      });
+    } catch (error) {
+      return rejectWithValue(error.message || "Failed to grade submission.");
+    }
   },
 );
+
+/* ============================================================
+   SLICE
+============================================================ */
 
 const assignmentSubmissionSlice = createSlice({
   name: "assignmentSubmission",
+
   initialState,
+
+  reducers: {
+    clearAssignmentSubmissions: (state) => {
+      state.assignmentSubmissions = [];
+    },
+
+    clearSubmissionError: (state) => {
+      state.error = null;
+    },
+
+    clearSubmission: (state) => {
+      state.submission = null;
+    },
+
+    clearMySubmission: (state) => {
+      state.mySubmission = null;
+    },
+  },
+
   extraReducers: (builder) => {
-    // submitAssignment: store the new submission and prepend to mySubmissions
+    /* ========================================================
+       SUBMIT
+    ======================================================== */
+
     builder
       .addCase(submitAssignment.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(submitAssignment.fulfilled, (state, action) => {
         state.loading = false;
-        state.mySubmission = action.payload;
-        const exists = state.mySubmissions.some(
-          (s) => s.id === action.payload.id,
+
+        const submission = action.payload;
+
+        state.mySubmission = submission;
+
+        const index = state.mySubmissions.findIndex(
+          (sub) => sub.id === submission.id,
         );
 
-        if (!exists) {
-          state.mySubmissions.unshift(action.payload);
+        if (index === -1) {
+          state.mySubmissions.unshift(submission);
+        } else {
+          state.mySubmissions[index] = submission;
+        }
+
+        const assignmentIndex = state.assignmentSubmissions.findIndex(
+          (sub) => sub.id === submission.id,
+        );
+
+        if (assignmentIndex !== -1) {
+          state.assignmentSubmissions[assignmentIndex] = submission;
         }
       })
+
       .addCase(submitAssignment.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to submit assignment.";
       });
 
-    // updateSubmission: patch the updated submission across all relevant lists
+    /* ========================================================
+       UPDATE
+    ======================================================== */
+
     builder
       .addCase(updateSubmission.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(updateSubmission.fulfilled, (state, action) => {
         state.loading = false;
-        if (state.mySubmission?.id === action.payload.id) {
-          state.mySubmission = action.payload;
+
+        const updated = action.payload;
+
+        /*
+            Single submission
+          */
+
+        if (state.submission?.id === updated.id) {
+          state.submission = updated;
         }
 
-        if (state.submission?.id === action.payload.id) {
-          state.submission = action.payload;
+        /*
+            Current student's submission
+          */
+
+        if (state.mySubmission?.id === updated.id) {
+          state.mySubmission = updated;
         }
+
+        /*
+            Current student's submissions
+          */
 
         const myIndex = state.mySubmissions.findIndex(
-          (sub) => sub.id === action.payload.id,
+          (sub) => sub.id === updated.id,
         );
+
         if (myIndex !== -1) {
-          state.mySubmissions[myIndex] = action.payload;
+          state.mySubmissions[myIndex] = updated;
         }
+
+        /*
+            Teacher Grade Center
+          */
 
         const assignmentIndex = state.assignmentSubmissions.findIndex(
-          (sub) => sub.id === action.payload.id,
+          (sub) => sub.id === updated.id,
         );
+
         if (assignmentIndex !== -1) {
-          state.assignmentSubmissions[assignmentIndex] = action.payload;
+          state.assignmentSubmissions[assignmentIndex] = updated;
         }
       })
+
       .addCase(updateSubmission.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to update submission.";
       });
 
-    // deleteSubmission: clear any references and filter the submission out
+    /* ========================================================
+       DELETE
+    ======================================================== */
+
     builder
       .addCase(deleteSubmission.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(deleteSubmission.fulfilled, (state, action) => {
         state.loading = false;
-        if (state.mySubmission?.id === action.payload) {
-          state.mySubmission = null;
-        }
 
-        if (state.submission?.id === action.payload) {
+        const submissionId = action.payload;
+
+        /*
+            Clear single submission
+          */
+
+        if (state.submission?.id === submissionId) {
           state.submission = null;
         }
 
+        /*
+            Clear current student's submission
+          */
+
+        if (state.mySubmission?.id === submissionId) {
+          state.mySubmission = null;
+        }
+
+        /*
+            Remove from student's list
+          */
+
         state.mySubmissions = state.mySubmissions.filter(
-          (sub) => sub.id !== action.payload,
+          (sub) => sub.id !== submissionId,
         );
+
+        /*
+            Remove from teacher Grade Center
+          */
 
         state.assignmentSubmissions = state.assignmentSubmissions.filter(
-          (sub) => sub.id !== action.payload,
+          (sub) => sub.id !== submissionId,
         );
       })
+
       .addCase(deleteSubmission.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to delete submission.";
       });
 
-    // fetchMySubmission: store the current student's submission
+    /* ========================================================
+       FETCH MY SUBMISSION
+    ======================================================== */
+
     builder
       .addCase(fetchMySubmission.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(fetchMySubmission.fulfilled, (state, action) => {
         state.loading = false;
+
         state.mySubmission = action.payload;
       })
+
       .addCase(fetchMySubmission.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to fetch submission.";
       });
 
-    // fetchMySubmissions: replace the student's submission list
+    /* ========================================================
+       FETCH MY SUBMISSIONS
+    ======================================================== */
+
     builder
       .addCase(fetchMySubmissions.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(fetchMySubmissions.fulfilled, (state, action) => {
         state.loading = false;
+
         state.mySubmissions = action.payload;
       })
+
       .addCase(fetchMySubmissions.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to fetch submissions.";
       });
 
-    // fetchAssignmentSubmissions: replace the per-assignment submission list
+    /* ========================================================
+       FETCH ASSIGNMENT SUBMISSIONS
+    ======================================================== */
+
     builder
       .addCase(fetchAssignmentSubmissions.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(fetchAssignmentSubmissions.fulfilled, (state, action) => {
         state.loading = false;
-        state.assignmentSubmissions = action.payload;
+
+        const incoming = action.payload || [];
+
+        /*
+            Merge submissions without duplicates.
+
+            Important because GradeCenter may fetch
+            submissions for multiple assignments.
+          */
+
+        const existingIds = new Set(
+          state.assignmentSubmissions.map((sub) => sub.id),
+        );
+
+        const newSubmissions = incoming.filter(
+          (sub) => !existingIds.has(sub.id),
+        );
+
+        state.assignmentSubmissions.push(...newSubmissions);
       })
+
       .addCase(fetchAssignmentSubmissions.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to fetch assignment submissions.";
       });
 
-    // fetchSubmission: store the single fetched submission
+    /* ========================================================
+       FETCH SINGLE SUBMISSION
+    ======================================================== */
+
     builder
       .addCase(fetchSubmission.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(fetchSubmission.fulfilled, (state, action) => {
         state.loading = false;
+
         state.submission = action.payload;
       })
+
       .addCase(fetchSubmission.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to fetch submission.";
       });
 
-    // gradeSubmission: apply the graded result to the matching submissions
+    /* ========================================================
+       GRADE
+    ======================================================== */
+
     builder
       .addCase(gradeSubmission.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(gradeSubmission.fulfilled, (state, action) => {
         state.loading = false;
-        if (state.mySubmission?.id === action.payload.id) {
-          state.mySubmission = action.payload;
+
+        const updated = action.payload;
+
+        /*
+            Single submission
+          */
+
+        if (state.submission?.id === updated.id) {
+          state.submission = updated;
         }
 
-        if (state.submission?.id === action.payload.id) {
-          state.submission = action.payload;
+        /*
+            Current student's submission
+          */
+
+        if (state.mySubmission?.id === updated.id) {
+          state.mySubmission = updated;
         }
 
-        const index = state.mySubmissions.findIndex(
-          (sub) => sub.id === action.payload.id,
+        /*
+            Student submissions
+          */
+
+        const myIndex = state.mySubmissions.findIndex(
+          (sub) => sub.id === updated.id,
         );
-        if (index !== -1) {
-          state.mySubmissions[index] = action.payload;
+
+        if (myIndex !== -1) {
+          state.mySubmissions[myIndex] = updated;
         }
 
-        const idx = state.assignmentSubmissions.findIndex(
-          (sub) => sub.id === action.payload.id,
+        /*
+            Teacher Grade Center
+          */
+
+        const assignmentIndex = state.assignmentSubmissions.findIndex(
+          (sub) => sub.id === updated.id,
         );
-        if (idx !== -1) {
-          state.assignmentSubmissions[idx] = action.payload;
+
+        if (assignmentIndex !== -1) {
+          state.assignmentSubmissions[assignmentIndex] = updated;
         }
       })
+
       .addCase(gradeSubmission.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error?.message;
+
+        state.error =
+          action.payload ||
+          action.error?.message ||
+          "Failed to grade submission.";
       });
   },
 });
+
+export const {
+  clearAssignmentSubmissions,
+  clearSubmissionError,
+  clearSubmission,
+  clearMySubmission,
+} = assignmentSubmissionSlice.actions;
 
 export default assignmentSubmissionSlice.reducer;

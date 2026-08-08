@@ -18,6 +18,13 @@ import {
   Checkout,
   EnrollmentSuccess,
   LearningPage,
+  AssignmentsPage,
+  AssignmentDetail,
+  GradeCenter,
+  Profile,
+  AdminUsers,
+  AdminEnrollments,
+  AdminRolesAccess,
 } from "./pages/index.js";
 import {
   DashboardHome,
@@ -162,21 +169,51 @@ const route = createBrowserRouter([
       },
       {
         path: "assignments",
-        // element: <Assignments />,
+        element: <AssignmentsPage />,
       },
-
       {
-        path: "quizzes",
-        // element: <Quizzes />,
+        path: "assignments/:assignmentId",
+        element: (
+          <RoleRoute allowedRoles={["teacher", "admin", "student"]}>
+            <AssignmentDetail />
+          </RoleRoute>
+        ),
       },
-
+      {
+        path: "grade",
+        element: (
+          <RoleRoute allowedRoles={["teacher"]}>
+            <GradeCenter />
+          </RoleRoute>
+        ),
+      },
       {
         path: "profile",
-        // element: <Profile />,
+        element: <Profile />,
       },
       {
-        path: "manage-courses",
-        // element: <ManageCourses />,
+        path: "users",
+        element: (
+          <RoleRoute allowedRoles={["admin"]}>
+            <AdminUsers />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "enrollment",
+        element: (
+          <RoleRoute allowedRoles={["admin"]}>
+            <AdminEnrollments />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "role-access",
+        element: (
+          <RoleRoute allowedRoles={["admin"]}>
+            <AdminRolesAccess />
+          </RoleRoute>
+        ),
       },
     ],
   },

@@ -1,3 +1,4 @@
+import authService from "../auth/auth.service";
 import { supabase } from "../supabaseClient";
 
 // Database operations for assignments (create, read, update, delete)
@@ -114,12 +115,42 @@ class AssignmentService {
   modules!inner(
     id,
     title,
-    course_id
+    course_id,
+    courses(
+      id,
+      title
+    )
   )
 `,
       )
       .eq("modules.course_id", courseId)
       .order("position");
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Get all assignments belonging to courses owned by the authenticated teacher
+  async getMyAssignments() {
+    const user = await authService.getUser();
+    if (!user) throw new Error("User not found.");
+
+    const { data, error } = await supabase
+      .from("assignments")
+      .select(`
+        *,
+        modules!inner(
+          id,
+          title,
+          course_id,
+          courses!inner(
+            id,
+            title
+          )
+        )
+      `)
+      .eq("modules.courses.teacher_id", user.id)
+      .order("position", { ascending: true });
 
     if (error) throw error;
     return data;

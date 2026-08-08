@@ -28,6 +28,7 @@ import {
   fetchModuleLessons,
   deleteLesson,
 } from "../../../features/lesson/lessonSlice";
+import { fetchModuleAssignments } from "../../../features/assignment/assignmentSlice";
 import { updateCourseStats } from "../../../features/course/courseSlice";
 import {
   EditModuleModal,
@@ -58,6 +59,9 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
 
   // ── Lesson data per module (keyed by moduleId) ──
   const [moduleLessons, setModuleLessons] = useState({});
+
+  // ── Assignment data per module (keyed by moduleId) ──
+  const [moduleAssignments, setModuleAssignments] = useState({});
 
   // ── Per-module loading indicators ──
   const [loadingModules, setLoadingModules] = useState(new Set());
@@ -103,6 +107,19 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
     [dispatch],
   );
 
+  // ── Fetch assignments for a module ──
+  const fetchAssignments = useCallback(
+    (moduleId) => {
+      dispatch(fetchModuleAssignments({ moduleId }))
+        .unwrap()
+        .then((data) => {
+          setModuleAssignments((prev) => ({ ...prev, [moduleId]: data || [] }));
+        })
+        .catch(() => {});
+    },
+    [dispatch],
+  );
+
   // ── Toggle module expand/collapse ──
   const toggleModule = useCallback(
     (moduleId) => {
@@ -116,10 +133,13 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
         if (!moduleLessons[moduleId]) {
           fetchLessons(moduleId);
         }
+        if (!moduleAssignments[moduleId]) {
+          fetchAssignments(moduleId);
+        }
         return next;
       });
     },
-    [moduleLessons, fetchLessons],
+    [moduleLessons, moduleAssignments, fetchLessons, fetchAssignments],
   );
 
   // ── Delete module handler ──
@@ -127,6 +147,11 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
     const deletedId = deleteTarget.id;
     await dispatch(deleteModule({ moduleId: deletedId }));
     setModuleLessons((prev) => {
+      const next = { ...prev };
+      delete next[deletedId];
+      return next;
+    });
+    setModuleAssignments((prev) => {
       const next = { ...prev };
       delete next[deletedId];
       return next;
@@ -193,6 +218,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
         {modules.map((mod) => {
           const isExpanded = expandedModules.has(mod.id);
           const lessons = moduleLessons[mod.id] || [];
+          const assignments = moduleAssignments[mod.id] || [];
           const isLoading = loadingModules.has(mod.id);
 
           return (
@@ -213,6 +239,7 @@ function CourseCurriculum({ courseId, isEnrolled = false }) {
                 <LessonsPanel
                   mod={mod}
                   lessons={lessons}
+                  assignments={assignments}
                   isLoading={isLoading}
                   isEnrolled={isEnrolled}
                   showTeacherActions={showTeacherActions}

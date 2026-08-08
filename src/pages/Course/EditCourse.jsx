@@ -8,7 +8,6 @@ function EditCourse() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { courseId } = useParams();
-  console.log(courseId);
 
   const [submitError, setSubmitError] = useState("");
 

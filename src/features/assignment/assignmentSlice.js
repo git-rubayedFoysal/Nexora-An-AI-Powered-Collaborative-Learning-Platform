@@ -33,11 +33,13 @@ function generateFilePath(
 // - assignment:            single assignment (currently selected/edited)
 // - moduleAssignments:     assignments belonging to one module
 // - courseAssignments:     all assignments across a course
+// - myAssignments:         all assignments across the teacher's own courses
 // - loading / error:       request status for async thunks
 const initialState = {
   assignment: null,
   moduleAssignments: [],
   courseAssignments: [],
+  myAssignments: [],
 
   loading: false,
   error: null,
@@ -106,8 +108,8 @@ export const createAssignment = createAsyncThunk(
       return await assignmentService.updateAssignment({
         assignmentId,
         assignmentData: {
-          attachmentName,
-          attachmentPath,
+          attachment_name: attachmentName,
+          attachment_path: attachmentPath,
         },
       });
     } catch (error) {
@@ -167,7 +169,15 @@ export const fetchModuleAssignments = createAsyncThunk(
 export const fetchCourseAssignments = createAsyncThunk(
   "assignment/fetchCourseAssignments",
   async ({ courseId }) => {
-    return assignmentService.getCourseAssignments({ courseId });
+    return await assignmentService.getCourseAssignments({ courseId });
+  },
+);
+
+// Fetch all assignments across courses owned by the authenticated teacher
+export const fetchMyAssignments = createAsyncThunk(
+  "assignment/fetchMyAssignments",
+  async () => {
+    return await assignmentService.getMyAssignments();
   },
 );
 
@@ -183,6 +193,12 @@ export const updateAssignmentPositions = createAsyncThunk(
 const assignmentSlice = createSlice({
   name: "assignment",
   initialState,
+  reducers: {
+    // Clear the single assignment (used on detail page unmount to prevent stale data)
+    clearAssignment: (state) => {
+      state.assignment = null;
+    },
+  },
   extraReducers: (builder) => {
     // createAssignment: push the new assignment into moduleAssignments, sorted
     builder
@@ -195,6 +211,9 @@ const assignmentSlice = createSlice({
         if (action.payload) {
           state.moduleAssignments.push(action.payload);
           state.moduleAssignments.sort((a, b) => a.position - b.position);
+
+          state.myAssignments.push(action.payload);
+          state.myAssignments.sort((a, b) => a.position - b.position);
         }
       })
       .addCase(createAssignment.rejected, (state, action) => {
@@ -210,13 +229,26 @@ const assignmentSlice = createSlice({
       })
       .addCase(updateAssignment.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.moduleAssignments.findIndex(
+
+        const moduleIndex = state.moduleAssignments.findIndex(
           (assignment) => assignment.id === action.payload.id,
         );
-        if (index !== -1) {
-          state.moduleAssignments[index] = action.payload;
+
+        if (moduleIndex !== -1) {
+          state.moduleAssignments[moduleIndex] = action.payload;
         }
+
         state.moduleAssignments.sort((a, b) => a.position - b.position);
+
+        const myIndex = state.myAssignments.findIndex(
+          (assignment) => assignment.id === action.payload.id,
+        );
+
+        if (myIndex !== -1) {
+          state.myAssignments[myIndex] = action.payload;
+        }
+
+        state.myAssignments.sort((a, b) => a.position - b.position);
 
         if (state.assignment?.id === action.payload.id) {
           state.assignment = action.payload;
@@ -236,6 +268,10 @@ const assignmentSlice = createSlice({
       .addCase(deleteAssignment.fulfilled, (state, action) => {
         state.loading = false;
         state.moduleAssignments = state.moduleAssignments.filter(
+          (assignment) => assignment.id !== action.payload,
+        );
+
+        state.myAssignments = state.myAssignments.filter(
           (assignment) => assignment.id !== action.payload,
         );
         if (state.assignment?.id === action.payload) {
@@ -292,6 +328,21 @@ const assignmentSlice = createSlice({
         state.error = action.error?.message;
       });
 
+    // fetchMyAssignments: replace the teacher's own assignment list
+    builder
+      .addCase(fetchMyAssignments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyAssignments.fulfilled, (state, action) => {
+        state.loading = false;
+        state.myAssignments = action.payload;
+      })
+      .addCase(fetchMyAssignments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error?.message;
+      });
+
     // updateAssignmentPositions: apply the new positions and re-sort
     builder
       .addCase(updateAssignmentPositions.pending, (state) => {
@@ -300,14 +351,27 @@ const assignmentSlice = createSlice({
       })
       .addCase(updateAssignmentPositions.fulfilled, (state, action) => {
         state.loading = false;
+
         action.payload.forEach(({ id, position }) => {
-          const assignment = state.moduleAssignments.find(
-            (ass) => ass.id === id,
+          const moduleAssignment = state.moduleAssignments.find(
+            (assignment) => assignment.id === id,
           );
 
-          if (assignment) assignment.position = position;
+          if (moduleAssignment) {
+            moduleAssignment.position = position;
+          }
+
+          const myAssignment = state.myAssignments.find(
+            (assignment) => assignment.id === id,
+          );
+
+          if (myAssignment) {
+            myAssignment.position = position;
+          }
         });
+
         state.moduleAssignments.sort((a, b) => a.position - b.position);
+        state.myAssignments.sort((a, b) => a.position - b.position);
       })
       .addCase(updateAssignmentPositions.rejected, (state, action) => {
         state.loading = false;
@@ -316,4 +380,5 @@ const assignmentSlice = createSlice({
   },
 });
 
+export const { clearAssignment } = assignmentSlice.actions;
 export default assignmentSlice.reducer;

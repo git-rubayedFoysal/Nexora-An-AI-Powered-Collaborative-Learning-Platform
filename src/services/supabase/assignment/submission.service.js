@@ -120,21 +120,36 @@ class SubmissionService {
       .from("assignment_submissions")
       .select(
         `
-  *,
-  users (
-    id,
-    full_name,
-    email,
-    avatar_url
-  )
-`,
+      *,
+      users!student_id (
+        id,
+        full_name,
+        email
+      ),
+      assignments!assignment_id (
+        id,
+        title,
+        max_score,
+        due_date,
+        modules (
+          id,
+          title,
+          courses (
+            id,
+            title
+          )
+        )
+      )
+    `,
       )
       .eq("assignment_id", assignmentId)
-      .order("submitted_at", {
-        ascending: false,
-      });
+      .order("submitted_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("GET ASSIGNMENT SUBMISSIONS ERROR:", error);
+      throw error;
+    }
+
     return data;
   }
   // Get a single submission by ID
@@ -147,8 +162,7 @@ class SubmissionService {
   users (
     id,
     full_name,
-    email,
-    avatar_url
+    email
   ),
   assignments (
     id,
@@ -187,8 +201,7 @@ class SubmissionService {
   users (
     id,
     full_name,
-    email,
-    avatar_url
+    email
   ),
   assignments (
     id,
