@@ -713,6 +713,10 @@ These are accessed via `import.meta.env.VITE_*` through `src/config/conf.js`.
 
 ## 19. Deployment
 
+### Live
+
+**Production:** [nexora-learning.vercel.app](https://nexora-learning.vercel.app)
+
 ### Frontend Deployment
 
 Nexora is a static React application. Deploy to any static hosting:
