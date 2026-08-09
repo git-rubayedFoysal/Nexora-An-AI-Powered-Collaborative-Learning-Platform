@@ -9,7 +9,7 @@ const initialState = {
   currentEnrollment: null, // Current user's enrollment for the course being viewed
   loading: false,          // Global loading state for async actions
   error: null,             // Last error message from async actions
-  totalCourses: 0,         // Total enrolled courses count (for pagination)
+  hasMore: false,          // Whether more pages of enrolled courses exist
 };
 
 // Thunks
@@ -147,18 +147,16 @@ const enrollSlice = createSlice({
       })
       .addCase(fetchMyEnrollments.fulfilled, (state, action) => {
         state.loading = false;
-        const { courses, total } = action.payload;
+        const { courses, hasMore } = action.payload;
         const { page } = action.meta.arg;
 
         if (page === 1) {
-          // Initial load or refresh — replace entire list
           state.myEnrollments = courses ?? [];
         } else {
-          // Load More — append to existing list
           state.myEnrollments = [...state.myEnrollments, ...(courses ?? [])];
         }
 
-        state.totalCourses = total;
+        state.hasMore = hasMore;
       })
       .addCase(fetchMyEnrollments.rejected, (state, action) => {
         state.loading = false;

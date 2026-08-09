@@ -13,6 +13,8 @@
  *  - price           — course price
  */
 
+import PLACEHOLDER_COURSE_IMAGE from "../../../utils/placeholderCourseImage";
+
 function CourseHero({
   thumbnail,
   title,
@@ -28,7 +30,7 @@ function CourseHero({
         src={thumbnail}
         alt={title}
         onError={(e) => {
-          e.currentTarget.src = "/placeholder-course.png";
+          e.currentTarget.src = PLACEHOLDER_COURSE_IMAGE;
         }}
         className="w-full h-48 sm:h-72 object-cover brightness-90"
       />

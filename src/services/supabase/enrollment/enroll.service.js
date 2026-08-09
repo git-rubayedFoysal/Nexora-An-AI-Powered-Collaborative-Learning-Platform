@@ -117,22 +117,27 @@ class EnrollService {
     const to = from + COURSE_PAGE_SIZE - 1;
 
     // Execute query with ordering and pagination
-    const { data, error, count } = await query
+    const { data, error } = await query
       .order("created_at", { ascending: false })
       .range(from, to);
 
     if (error) throw error;
 
     // Deduplicate by course_id — keeps only the first enrollment per course
-    // This is a safety net against stale duplicate rows in the database
     const unique = (data || []).reduce((acc, curr) => {
       if (!acc.some((e) => e.course_id === curr.course_id)) acc.push(curr);
       return acc;
     }, []);
 
+    // Filter to published courses only
+    const published = unique.filter((e) => e.courses?.status === "published");
+
+    // hasMore: DB returned a full page (before filtering) → more pages likely exist
+    const hasMore = (data || []).length === COURSE_PAGE_SIZE;
+
     return {
-      courses: unique,
-      total: count,
+      courses: published,
+      hasMore,
     };
   }
 

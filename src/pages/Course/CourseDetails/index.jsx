@@ -26,6 +26,7 @@ import {
 } from "../../../features/enroll/enrollSlice";
 import courseStorage from "../../../services/supabase/course/course.storage";
 import { LoadingState, CreateModuleModal } from "../../../components";
+import PLACEHOLDER_COURSE_IMAGE from "../../../utils/placeholderCourseImage";
 
 import CourseHero from "./CourseHero";
 import CourseMeta from "./CourseMeta";
@@ -102,7 +103,7 @@ function CourseDetails() {
   // ── Derived values ──
   const thumbnail = course.thumbnail_url
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
-    : "/placeholder-course.png";
+    : PLACEHOLDER_COURSE_IMAGE;
 
   const statusCfg =
     {

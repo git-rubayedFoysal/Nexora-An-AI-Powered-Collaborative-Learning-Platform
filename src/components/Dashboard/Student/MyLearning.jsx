@@ -10,7 +10,7 @@ function MyLearning() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
 
-  const { myEnrollments, loading, totalCourses } = useSelector(
+  const { myEnrollments, loading, hasMore } = useSelector(
     (state) => state.enroll,
   );
 
@@ -98,9 +98,7 @@ function MyLearning() {
       )}
 
       {/* Load more button */}
-      {!loading &&
-        myEnrollments.length > 0 &&
-        myEnrollments.length < totalCourses && (
+      {!loading && myEnrollments.length > 0 && hasMore && (
           <div className="text-center mt-8">
             <button
               onClick={handleLoadMore}

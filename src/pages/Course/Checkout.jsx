@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCourse } from "../../features/course/courseSlice";
 import { enrollCourse } from "../../features/enroll/enrollSlice";
 import courseStorage from "../../services/supabase/course/course.storage";
+import PLACEHOLDER_COURSE_IMAGE from "../../utils/placeholderCourseImage";
 
 function Checkout() {
   const { courseId } = useParams();
@@ -23,7 +24,7 @@ function Checkout() {
   const isFree = !course?.price || course.price === 0;
   const thumbnail = course?.thumbnail_url
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
-    : "/placeholder-course.png";
+    : PLACEHOLDER_COURSE_IMAGE;
 
   async function handleEnroll() {
     setSubmitError("");
@@ -95,7 +96,7 @@ function Checkout() {
               src={thumbnail}
               alt={course.title}
               onError={(e) => {
-                e.currentTarget.src = "/placeholder-course.png";
+                e.currentTarget.src = PLACEHOLDER_COURSE_IMAGE;
               }}
               className="w-20 h-20 rounded-xl object-cover shrink-0 brightness-90"
             />

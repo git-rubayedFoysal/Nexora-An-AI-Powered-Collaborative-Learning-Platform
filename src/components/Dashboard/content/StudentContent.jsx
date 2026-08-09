@@ -22,7 +22,7 @@ function StudentContent({ role, user }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { myEnrollments, totalCourses } = useSelector(
+  const { myEnrollments } = useSelector(
     (state) => state.enroll,
   );
   const { mySubmissions } = useSelector(
@@ -75,7 +75,7 @@ function StudentContent({ role, user }) {
   }, [myEnrollments, mySubmissions]);
 
   // ── Derived stats ──
-  const enrolledCount = totalCourses || myEnrollments.length;
+  const enrolledCount = myEnrollments.length;
   const submittedCount = mySubmissions.length;
   const gradedCount = mySubmissions.filter((s) => s.status === "graded").length;
   const avgProgress =

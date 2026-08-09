@@ -2,6 +2,7 @@
 import { Button } from "../index";
 import courseStorage from "../../services/supabase/course/course.storage";
 import formatDuration from "../../utils/formatDuration";
+import PLACEHOLDER_COURSE_IMAGE from "../../utils/placeholderCourseImage";
 
 // Status badge styles for teacher/admin variants
 const STATUS_CONFIG = {
@@ -35,7 +36,7 @@ function CourseCard({
   // Get thumbnail URL or fallback to placeholder
   const publicUrl = course.thumbnail_url
     ? courseStorage.getThumbnailUrl(course.thumbnail_url)
-    : "/placeholder-course.png";
+    : PLACEHOLDER_COURSE_IMAGE;
 
   return (
     <div className="course-card glass rounded-2xl overflow-hidden border border-border flex flex-col">
@@ -46,7 +47,7 @@ function CourseCard({
           alt={course.title}
           loading="lazy"
           onError={(e) => {
-            e.currentTarget.src = "/placeholder-course.png";
+            e.currentTarget.src = PLACEHOLDER_COURSE_IMAGE;
           }}
           className="w-full h-full object-cover brightness-90"
         />
