@@ -2,6 +2,8 @@
 
 AI-powered collaborative learning platform built with React 19, Vite 8, Tailwind v4, Redux Toolkit, and Supabase.
 
+**Live:** [nexora-learning.vercel.app](https://nexora-learning.vercel.app)
+
 ## Features
 
 ### Student Dashboard
