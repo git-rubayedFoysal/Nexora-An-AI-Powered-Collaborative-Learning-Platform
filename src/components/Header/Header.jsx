@@ -1,6 +1,5 @@
 // Main header — shows logo, nav links, and auth/guest controls
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
 import { useSelector } from "react-redux";
 import { Logo } from "../index";
 
