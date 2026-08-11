@@ -2,6 +2,7 @@
 function FeatureSection() {
   const featuresData = [
     {
+      id: "Ai",
       title: "AI Tutor",
       icon: "🤖",
       description:
@@ -9,6 +10,7 @@ function FeatureSection() {
       tech: "Gemini API",
     },
     {
+      id: "chat",
       title: "Real-time Chat",
       icon: "💬",
       description:
@@ -16,6 +18,7 @@ function FeatureSection() {
       tech: "Supabase Realtime",
     },
     {
+      id: "quize",
       title: "Smart Quizzes",
       icon: "❓",
       description:
@@ -23,6 +26,7 @@ function FeatureSection() {
       tech: "Auto Grading",
     },
     {
+      id: "whiteboard",
       title: "Live Whiteboard",
       icon: "🎨",
       description:
@@ -30,6 +34,7 @@ function FeatureSection() {
       tech: "tldraw + Realtime",
     },
     {
+      id: "dashboard",
       title: "Analytics Dashboard",
       icon: "📊",
       description:
@@ -37,6 +42,7 @@ function FeatureSection() {
       tech: "Recharts",
     },
     {
+      id: "file",
       title: "File Submissions",
       icon: "📤",
       description:
@@ -69,22 +75,23 @@ function FeatureSection() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* <!-- AI Tutor --> */}
           {featuresData.map((item) => (
-            <>
-              <div className="feature-card glass rounded-2xl p-6 border border-white/6 cursor-default">
-                <div className="w-12 h-12 rounded-xl bg-violet/20 flex items-center justify-center text-2xl mb-5 border border-violet/20">
-                  {item.icon}
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 font-[Outfit]">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-slate leading-relaxed mb-4">
-                  {item.description}
-                </p>
-                <span className="tag bg-violet/15 text-violet-light border border-violet/20">
-                  {item.tech}
-                </span>
+            <div
+              key={item.id}
+              className="feature-card glass rounded-2xl p-6 border border-white/6 cursor-default"
+            >
+              <div className="w-12 h-12 rounded-xl bg-violet/20 flex items-center justify-center text-2xl mb-5 border border-violet/20">
+                {item.icon}
               </div>
-            </>
+              <h3 className="text-lg font-bold text-white mb-2 font-[Outfit]">
+                {item.title}
+              </h3>
+              <p className="text-sm text-slate leading-relaxed mb-4">
+                {item.description}
+              </p>
+              <span className="tag bg-violet/15 text-violet-light border border-violet/20">
+                {item.tech}
+              </span>
+            </div>
           ))}
         </div>
       </div>

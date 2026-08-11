@@ -75,9 +75,7 @@ function Header() {
           <div className="flex items-center h-17 gap-4 justify-between">
             <div className="flex items-center gap-14">
               {/* Logo */}
-              <Link to="/" className="flex items-center gap-2.5 shrink-0">
-                <Logo />
-              </Link>
+              <Logo />
 
               {/* Desktop nav links (guests only) */}
               <NavLinks links={navLinks} />
