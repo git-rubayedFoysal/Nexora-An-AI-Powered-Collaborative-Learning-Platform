@@ -52,7 +52,10 @@ function Testimonials() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {reviewData.map((item) => (
-            <div className="testimonial-card glass rounded-2xl p-6 border border-white/6">
+            <div
+              key={item.badge}
+              className="testimonial-card glass rounded-2xl p-6 border border-white/6"
+            >
               <div className="flex gap-0.5 mb-4">
                 {Array.from({ length: item.stars }).map((_, index) => (
                   <SvgStar key={index} />
